@@ -207,18 +207,139 @@
 -- 
 -- 9*. Создайте отчет по суммарным месячным продажам фирмы за все 12 месяцев в 2007 году.
 -- (oe.orders)
+--
+-- with 
+--     year_ as (
+--         select 1 as month_ from dual union all
+--         select 2 as month_ from dual union all
+--         select 3 as month_ from dual union all
+--         select 4 as month_ from dual union all
+--         select 5 as month_ from dual union all
+--         select 6 as month_ from dual union all
+--         select 7 as month_ from dual union all
+--         select 8 as month_ from dual union all
+--         select 9 as month_ from dual union all
+--         select 10 as month_ from dual union all
+--         select 11 as month_ from dual union all
+--         select 12 as month_ from dual
+--         ),
+--     sales_ as (
+--         select 
+--             extract(month from ord.order_date) as month_,
+--             sum (ord.order_total) as total_sales
+--         from
+--             oe.orders ord
+--         where
+--             ord.order_date between '01-JAN-07' and '31-DEC-07'
+--         group by 
+--             extract(month from ord.order_date)
+--         )
+-- select 
+--     year_.month_,
+--     sales_.total_sales
+-- from 
+--     year_
+-- left join   
+--     sales_
+--     on year_.month_ = sales_.month_
+-- order by 
+--     year_.month_
 -- 
 ---------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------
 -- 
 -- 10*. Добавьте к отчету фамилию продавшего на наибольшую сумму менеджера. (hr.employees)
 -- 
+-- with 
+--     -- вспомогательная таблица месяцев для заполнения отсутствующих
+--     year_ as (
+--         select 1 as month_ from dual union all
+--         select 2 as month_ from dual union all
+--         select 3 as month_ from dual union all
+--         select 4 as month_ from dual union all
+--         select 5 as month_ from dual union all
+--         select 6 as month_ from dual union all
+--         select 7 as month_ from dual union all
+--         select 8 as month_ from dual union all
+--         select 9 as month_ from dual union all
+--         select 10 as month_ from dual union all
+--         select 11 as month_ from dual union all
+--         select 12 as month_ from dual
+--         ),
+--     -- общие продажи по месяцам
+--     sales_ as (
+--         select 
+--             extract(month from ord.order_date) as month_,
+--             sum (ord.order_total) as total_sales
+--         from
+--             oe.orders ord
+--         where
+--             ord.order_date between '01-JAN-07' and '31-DEC-07'
+--         group by 
+--             extract(month from ord.order_date)
+--         ),
+--     -- продажи по месяцам по сотрудникам
+--     best_employees_ as (
+--         select 
+--             extract(month from ord.order_date) as month_,
+--             emp.last_name || ' ' || emp.first_name as employee,
+--             sum (ord.order_total) as total_sales
+--         from
+--             oe.orders ord
+--         inner join
+--             hr.employees emp
+--             on ord.sales_rep_id = emp.employee_id
+--         where 1=1
+--             and ord.order_date between '01-JAN-07' and '31-DEC-07'
+--         group by 
+--             extract(month from ord.order_date), emp.last_name || ' ' || emp.first_name
+--         )
+-- select 
+--     year_.month_,
+--     sales_.total_sales,
+--     case 
+--         when best_.total_sales is not null then best_.employee || ' (' || best_.total_sales || ')'
+--         else null
+--     end as best_employee_with_sales_per_month
+-- from 
+--     year_
+-- left join   
+--     sales_
+--     on year_.month_ = sales_.month_
+-- left join   
+--     best_employees_ best_
+--     on year_.month_ = best_.month_
+-- where
+--     -- отбираем сотрудников с максимальными продажами в просматриваемом месяце
+--     best_.total_sales = (select 
+--                             max (total_sales)
+--                         from 
+--                             best_employees_  
+--                         where 
+--                             best_employees_.month_ = year_.month_
+--                         )
+--     -- сохраняем с null для сохранения месяцев, в которых нет продаж сотрудниками
+--     or best_.total_sales is null
+-- order by 
+--     year_.month_
+--
 ---------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------
 -- 
 -- 11*. Дана таблица ученик – оценка. Выведите количество двоек у учеников, имеющих 10 и
 -- более пятерок. За один проход по таблице.
--- 
+--
+-- select
+--     name,
+--     count (case when mark = 2 then 1 end) as count_5
+-- from 
+--     de3at.kela_students
+-- group by 
+--     name
+-- having 
+--     count (case when mark = 5 then 1 else null end) > 10
+-- order by 
+--     name
+--
 ---------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------
-
