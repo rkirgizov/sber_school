@@ -27,17 +27,12 @@
 -- select 
 --     emp.last_name,
 --     emp.first_name,
---     count(  
---         case   
---             when order_id is not null then ord.order_id 
---             else null
---         end   
---     ) as order_count  
+--     count(ord.sales_rep_id) as order_count  
 -- from 
 --     hr.employees emp
 -- left join
 --     oe.orders ord
---     on emp.employee_id = ord. sales_rep_id
+--     on emp.employee_id = ord.sales_rep_id
 -- group by 
 --     emp.last_name, emp.first_name
 -- order by 
@@ -48,15 +43,16 @@
 --
 -- 3. Выведите имена покупателей и количество заказов, которые он сделал. (oe.customers,
 -- oe.orders)
---
+-- --
 -- select 
 --     cus.cust_first_name,
---     count(  
---         case   
---             when order_id is not null then ord.order_id 
---             else null
---         end   
---     ) as order_count      
+--     count(ord.customer_id) as order_count  
+--     -- count(  
+--     --     case   
+--     --         when order_id is not null then ord.order_id 
+--     --         else null
+--     --     end   
+--     -- ) as order_count      
 -- from 
 --     oe.customers cus
 -- left join
@@ -130,6 +126,12 @@
 -- 6. Выведите список (фамилия, имя сотрудника) и их начальников (фамилия, имя).
 -- (hr.employees)
 -- 
+
+
+
+
+
+-- 
 ---------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------
 -- 
@@ -161,4 +163,3 @@
 -- 
 ---------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------
-
