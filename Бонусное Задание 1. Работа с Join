@@ -126,11 +126,34 @@
 -- 6. Выведите список (фамилия, имя сотрудника) и их начальников (фамилия, имя).
 -- (hr.employees)
 -- 
-
-
-
-
-
+-- 1 вариант
+-- select 
+--     emp1.last_name || ' ' || emp1.first_name as employee_, 
+--     emp2.last_name || ' ' || emp2.first_name as manager_
+-- from  
+--     hr.employees emp1 
+-- inner join  
+--     hr.employees emp2 
+--     on emp1.manager_id = emp2.employee_id
+-- order by 
+--     emp1.last_name,
+--     emp1.first_name
+-- 
+-- 2 вариант с рекурсией
+-- select 
+--     lpad(' ', 2*(level - 1)) || emp1.last_name || ' ' || emp1.first_name as employees_structure
+-- from
+--     hr.employees emp1 -- employees
+-- left join 
+--     hr.employees emp2 -- managers
+--     on emp1.manager_id = emp2.employee_id
+-- start with
+--     emp1.manager_id is null 
+-- connect by prior
+--     emp1.employee_id = emp2.employee_id
+-- order siblings by 
+--     emp1.last_name, 
+--     emp1.first_name
 -- 
 ---------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------
@@ -163,3 +186,4 @@
 -- 
 ---------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------
+
