@@ -27,7 +27,56 @@ from
 -- 3. Приведите в порядок таблицу DE_COMMON.DATASOURCE: корректно заполните поля first_name, last_name; 
 -- разделите поле email на email и phone; телефон отформатируйте по маске +7 (123) 456-78-90; унифицируйте поле gender.
 --
-
+select 
+    regexp_substr(
+            first_name || ' ' || last_name /*source_char*/,
+            '[a-zA-z]+' /*pattern*/
+            ) as first_name,
+    regexp_substr(
+            first_name || ' ' || last_name /*source_char*/,
+            '[a-zA-z]+' /*pattern*/,
+            1 /*position*/,
+            2 /*occurrence*/
+            ) AS last_name,
+    regexp_substr(
+            email /*source_char*/,
+            '.+@[a-zA-Z0-9.]+' /*pattern*/
+            ) as email,
+    replace(
+        substr(
+            regexp_replace(
+                regexp_replace(
+                    regexp_replace(
+                        email,'.+@[a-zA-Z0-9.]+',''), '[+ -]' , '' ) , '^\d' , '+7 (') , 1 , 7 )
+                            || ') ' ||
+        substr(
+            regexp_replace(
+                regexp_replace(
+                    regexp_replace(
+                        email,'.+@[a-zA-Z0-9.]+',''), '[+ -]' , '' ), '^\d' , '+7 (') , 8 , 3 ) 
+                            || '-' ||
+        substr(
+            regexp_replace(
+                regexp_replace(
+                    regexp_replace(
+                        email,'.+@[a-zA-Z0-9.]+',''), '[+ -]' , '' ), '^\d' , '+7 (') , 11 , 2) 
+                            || '-' ||
+        substr(
+            regexp_replace(
+                regexp_replace(
+                    regexp_replace(
+                        email,'.+@[a-zA-Z0-9.]+',''), '[+ -]' , '' ), '^\d' , '+7 (') , 13 , 2), ') --' ,''
+        ) as phone_number,
+    case substr(gender, 1, 1)
+        when 'F' 
+            then 'Female'
+        when 'M'
+            then 'Male'
+        else
+            'Unknown'
+        end as gender
+from 
+    DE_COMMON.DATASOURCE
 --
 -----------------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------
