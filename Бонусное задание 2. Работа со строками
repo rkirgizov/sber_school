@@ -29,17 +29,17 @@ from
 --
 select 
     regexp_substr(
-            first_name || ' ' || last_name /*source_char*/,
+            trim(first_name) || ' ' || trim(last_name) /*source_char*/,
             '[a-zA-z]+' /*pattern*/
             ) as first_name,
     regexp_substr(
-            first_name || ' ' || last_name /*source_char*/,
+            trim(first_name) || ' ' || trim(last_name) /*source_char*/,
             '[a-zA-z]+' /*pattern*/,
             1 /*position*/,
             2 /*occurrence*/
             ) AS last_name,
     regexp_substr(
-            email /*source_char*/,
+            trim(email) /*source_char*/,
             '.+@[a-zA-Z0-9.]+' /*pattern*/
             ) as email,
     replace(
@@ -67,7 +67,7 @@ select
                     regexp_replace(
                         email,'.+@[a-zA-Z0-9.]+',''), '[+ -]' , '' ), '^\d' , '+7 (') , 13 , 2), ') --' ,''
         ) as phone_number,
-    case substr(gender, 1, 1)
+    case substr(trim(gender), 1, 1)
         when 'F' 
             then 'Female'
         when 'M'
