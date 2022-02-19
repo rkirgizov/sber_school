@@ -5,10 +5,10 @@
 --         person,
 --         class,
 --         salary,
---         dt as date_from,
+--         dt as effective_from,
 --         coalesce (
 --             lead (dt) over (partition by person order by dt) - interval '1' second,
---             date'2999-12-31') as date_to
+--             date'2999-12-31') as effective_to
 --     from DE_COMMON.HISTGROUP;
 
 
@@ -17,16 +17,16 @@
 -- select 
 --     person,
 --     class,
---     date_from,
+--     effective_from,
 --     coalesce (
---             lead (date_from) over (partition by person order by person, date_from) - interval '1' second,
---             date'2999-12-31') date_to
+--             lead (effective_from) over (partition by person order by person, effective_from) - interval '1' second,
+--             date'2999-12-31') effective_to
 -- from (
 --     select 
 --         person,
 --         class,
---         date_from,
---         lag (class) over (partition by person order by person, date_from) as class_lag
+--         effective_from,
+--         lag (class) over (partition by person order by person, effective_from) as class_lag
 --     from 
 --         DE3AT.KELA_HISTGROUP
 -- )
