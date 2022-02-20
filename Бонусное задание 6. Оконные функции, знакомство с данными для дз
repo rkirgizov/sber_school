@@ -147,3 +147,30 @@ where
 -- MONTH_PAID - суммарно выплачено в месяце,
 -- MONTH_REST - осталось выплатить за месяц.
 -- Проверяется в первую очередь понимание как соединять фактовую таблицу с SCD2 таблицей.
+----------------------------------------------------------------------------------------------------
+with 
+    salary_hist as (
+        select 
+            person,
+            class,
+            salary,
+            dt as effective_from,
+            coalesce (lead (dt) over (partition by person order by dt) - interval '1' second,
+                date'2999-12-31') as effective_to
+        from DE_COMMON.HISTGROUP
+        )
+select 
+    payments.payment_dt,
+    payments.person,
+    salary,
+    payments.payment,
+    sum (payments.payment) over (partition by trunc(payments.payment_dt, 'month'), payments.person 
+        order by payments.person, payments.payment_dt) as month_paid,
+    sal_hist.salary - sum (payments.payment) over (partition by trunc(payments.payment_dt, 'month'), payments.person 
+        order by payments.person, payments.payment_dt) as month_rest    
+from   
+    DE_COMMON.PAYMENTS payments
+JOIN 
+    salary_hist sal_hist 
+    on payments.person = sal_hist.person 
+    and payments.payment_dt between sal_hist.effective_from and sal_hist.effective_to
