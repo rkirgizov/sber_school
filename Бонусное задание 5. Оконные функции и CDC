@@ -2,62 +2,124 @@
 
 -- Возьмите в работу таблицу DE_COMMON.HISTGROUP. Создайте свою SCD2 таблицу DE3AT.XXXX_HISTGROUP.
 ------------------------------------------------------------------------------------------------------
--- create table kela_histgroup as
---     select 
---         person,
---         class,
---         salary,
---         dt as effective_from,
---         coalesce (
---             lead (dt) over (partition by person order by dt) - interval '1' second,
---             date'2999-12-31') as effective_to
---     from DE_COMMON.HISTGROUP;
+create table kela_histgroup as
+    select 
+        person,
+        class,
+        salary,
+        dt as effective_from,
+        coalesce (
+            lead (dt) over (partition by person order by dt) - interval '1' second,
+            date'2999-12-31') as effective_to
+    from DE_COMMON.HISTGROUP;
 
 
 -- Выберите из вашей таблицы сведения о разряде сотрудника. Сохраните SCD2 формат.
 ------------------------------------------------------------------------------------------------------
--- select 
---     person,
---     class,
---     effective_from,
---     coalesce (
---             lead (effective_from) over (partition by person order by person, effective_from) - interval '1' second,
---             date'2999-12-31') effective_to
--- from (
---     select 
---         person,
---         class,
---         effective_from,
---         lag (class) over (partition by person order by person, effective_from) as class_lag
---     from 
---         DE3AT.KELA_HISTGROUP
--- )
--- where 
---     class != class_lag or class_lag is null;
+select 
+    person,
+    class,
+    effective_from,
+    coalesce (
+            lead (effective_from) over (partition by person order by person, effective_from) - interval '1' second,
+            date'2999-12-31') effective_to
+from (
+    select 
+        person,
+        class,
+        effective_from,
+        lag (class) over (partition by person order by person, effective_from) as class_lag
+    from 
+        DE3AT.KELA_HISTGROUP
+)
+where 
+    class != class_lag or class_lag is null;
 
 
 -- Используя HR.EMPLOYEES отранжируйте пользователей внутри каждого департамента по зарплате, выведете топ 5 самых дорогих для компании сотрудников в каждом департаменте
 ------------------------------------------------------------------------------------------------------
--- select 
---     *
--- from ( 
---     select 
---         first_name,
---         last_name,
---         salary,
---         department_id,
---         row_number () over (partition by department_id order by salary desc) as rank_
---     from 
---         hr.employees
---     )
--- where 
---     rank_ < 6
--- order by department_id, rank_
+select 
+    *
+from ( 
+    select 
+        first_name,
+        last_name,
+        salary,
+        department_id,
+        row_number () over (partition by department_id order by salary desc) as rank_
+    from 
+        hr.employees
+    )
+where 
+    rank_ < 6
+order by department_id, rank_
+
 
 -- Для каждого сотрудника выведете, насколько его зарплата отличается от предыдущего по порядку из прошлой задачи внутри департамента
+------------------------------------------------------------------------------------------------------
+select 
+    first_name,
+    last_name,
+    salary,
+    coalesce (
+        salary - lag (salary) over (partition by department_id order by salary desc),
+        0
+    ) as prev_emp_salary,
+    department_id,
+    rank_
+from ( 
+    select 
+        first_name,
+        last_name,
+        salary,
+        department_id,
+        row_number () over (partition by department_id order by salary desc) as rank_
+    from 
+        hr.employees
+    )
+where 
+    rank_ < 6
+order by department_id, rank_
+
+
 -- Для каждого сотрудника выведете, какой процент от суммы всех зарплат департамента составляет его зарплата
+------------------------------------------------------------------------------------------------------
+select 
+    first_name,
+    last_name,
+    salary,
+    round ((salary / sum (salary) over (partition by department_id)) * 100, 1) as percent_dep_salary,
+    department_id
+from 
+    hr.employees
+
+
 -- Для каждого сотрудника по убыванию зарплаты в департаменте вывведете, какая сумма зарплат остаётся в хвосте (то есть сумма зарплат после него)
+------------------------------------------------------------------------------------------------------
+select 
+    first_name,
+    last_name,
+    salary,
+    sum (salary) over
+        (partition by department_id order by salary desc ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
+        - salary
+        as tail_salary_by_dep,
+    department_id
+from 
+    hr.employees
+
+
 -- Для каждого сотрудника в одной таблице выведете, какой процент его зарплата составляет от зарплаты самого дорого сотрудника департамента и во сколько раз его зарплата больше зарплаты самого низкооплачиваемого сотрудника департамента
+------------------------------------------------------------------------------------------------------
+select 
+    first_name,
+    last_name,
+    salary,
+    round (salary*100 / max (salary) over (partition by department_id), 1) as pct_from_max_sal_by_dep,
+    round (salary / min (salary) over (partition by department_id), 1) as quotient_of_min_sal_by_dep,
+    department_id
+from 
+    hr.employees
 
 
 -- Ниже приведён блок кода, заполняющий некоторую таблицу данными, пользуясь кодом с занятия постройте инкрементальную загрузку INSERT обновлений данных в аналог хранилища данных с SCD1 подходом:
