@@ -97,187 +97,459 @@
 -- 5) в теге с классом price цена книги
 -- Необходимо написать скрипт обработки (transform шаг, запрос), который позволит достать значение из поля value для каждого пункта в отдельную колонку и по возможности очистить и привести к оптимальному типу данных
 
--- task5_bonus_cdc.sql
--- SQL
--- Комментарии
--- Мои задания
--- Пропущен срок сдачи
--- Личные комментарии
 
--- CREATE TABLE XXXX_data_src(
---     value varchar(512)
--- );
--- INSERT INTO data(value) values ('<div>
+
+-- -- Создаём таблицу
+-- CREATE TABLE kela_data_src(value varchar(512));
+
+-- -- Заполняем данными
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>0</p>
 -- <h1>Литература на английском языке</h1>
 -- <p class="title">Moab is my Washpot</p>
 -- <p class="author">Fry S.</p>
 -- <p class="price">1150 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>1</p>
 -- <h1>История. Приключения</h1>
 -- <p class="title">Остров Сокровищ : роман</p>
 -- <p class="author">Стивенсон Р. Л.</p>
 -- <p class="price">1480 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>2</p>
 -- <h1>Современная отечественная проза</h1>
 -- <p class="title">Тайное имя - ЙХВХ : шпионский роман-фантазия</p>
 -- <p class="author">Гиршович Л.</p>
 -- <p class="price">1660 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>3</p>
 -- <h1>Современная отечественная проза</h1>
 -- <p class="title">Жених был в весь черных штанах : рассказы</p>
 -- <p class="author">Добровинский А.</p>
 -- <p class="price">950 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>4</p>
 -- <h1>Зарубежные детективы и боевики</h1>
 -- <p class="title">Грешница : роман</p>
 -- <p class="author">Герритсен Т.</p>
 -- <p class="price">210 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>5</p>
 -- <h1>Зарубежные детективы и боевики</h1>
 -- <p class="title">Комната мертвых : роман</p>
 -- <p class="author">Тилье Ф.</p>
 -- <p class="price">210 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div><p>6</p>
+-- INSERT INTO kela_data_src(value) values ('<div><p>6</p>
 -- <h1>Проза</h1>
 -- <p class="title">Избранный</p>
 -- <p class="author">Рубенс Б.</p>
 -- <p class="price">760 ₽</p>
 -- <div>');
--- INSERT INTO data(value) values ('
+-- INSERT INTO kela_data_src(value) values ('
 -- </div>
 -- <p>7</p>
 -- <h1>Фольклор. Мифология. Эпос</h1>
 -- <p class="title">Русские народные сказки А. Н. Афанасьева </p>
 -- <p class="price">61400 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>8</
 -- <h1>Зарубежные детективы и боевики</h1>
 -- <p class="title">Утраченный символ : роман</p>
 -- <p class="author">Браун Д.</p>
 -- <p class="price">310 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>9</p>
 -- <h1>Зарубежные детективы и боевики</h1>
 -- <p class="title">Ангелы и демоны : роман</p>
 -- <p class="author">Браун Д.</p>
 -- <p class="price">310 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>10</p>
 -- <h1>Проза</h1>
 -- <p class="title">Бремя страстей человеческих : роман</p>
 -- <p class="author">Моэм С.</p>
 -- <p class="price">340 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>11</p>
 -- <h1>Юмор. Сатира</h1>
 -- <p class="title">Супружество как точная наука : рассказы</p>
 -- <p class="author">О. Генри.</p>
 -- <p class="price">180 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>12</
 -- <h1>Зарубежная фантастик</h1>
 -- <p class="title"></p>
 -- <p class="author"> Эльфийский рок : антология</p>
 -- <p class="price">1240 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>13</p>
 -- <h1>Зарубежные комиксы</h1>
 -- <p class="title">Реквием. Рыцарь-вампир. Т.3. Битва драконов. Клуб адского пламени : графические романы</p>
 -- <p class="author">Миллс П.</p>
 -- <p class="price">1290 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>14</p>
 -- <h1>Зарубежные комиксы</h1>
 -- <p class="title">Эххо. Зеркальный мир. Т.3. Секрет прешонов. Далёкий юг : графические романы</p>
 -- <p class="author">Арлестон К.</p>
 -- <p class="price">1290 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>15</p>
 -- <h1>Современная отечественная проза</h1>
 -- <p class="title">Два маленьких романа</p>
 -- <p class="author">Гришковец Е. В.</p>
 -- <p class="price">520 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>16</p>
 -- <h1>Зарубежные детективы и боевики</h1>
 -- <p class="title">Двойник : роман</p>
 -- <p class="author">Герритсен Т.</p>
 -- <p class="price">210 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>17</p>
 -- <h1>Зарубежные детективы и боевики</h1>
 -- <p class="title">Головоломка : роман</p>
 -- <p class="author">Тилье Ф.</p>
 -- <p class="price">210 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>19</p>
 -- <h1>Художественная публицистика</h1>
 -- <p class="title">Записные книжки</p>
 -- <p class="author">Довлатов С.</p>
 -- <p class="price">400 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>20</p>
 -- <h1>Литература на английском языке</h1>
 -- <p class="title">Moab is my Washpot</p>
 -- <p class="author">Fry S.</p>
 -- <p class="price">1150 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>21</p>
 -- <h1>История. Приключения</h1>
 -- <p class="title">Остров Сокровищ : роман</p>
 -- <p class="author">Стивенсон Р. Л.</p>
 -- <p class="price">1480 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>22</p>
 -- <h1>Современная отечественная проза</h1>
 -- <p class="title">Тайное имя - ЙХВХ : шпионский роман-фантазия</p>
 -- <p class="author">Гиршович Л.</p>
 -- <p class="price">1660 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>23</p>
 -- <h1>Современная отечественная проза</h1>
 -- <p class="title">Жених был в весь черных штанах : рассказы</p>
 -- <p class="author">Добровинский А.</p>
 -- <p class="price">950 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
+-- INSERT INTO kela_data_src(value) values ('<div>
 -- <p>24</p>
 -- <h1>Зарубежные детективы и боевики</h1>
 -- <p class="title">Грешница : роман</p>
 -- <p class="author">Герритсен Т.</p>
 -- <p class="price">210 ₽</p>
 -- </div>');
--- INSERT INTO data(value) values ('<div>
--- <p>25</p>
--- <h1>Зарубежные детективы и боевики</h1>
--- <p class="title">Комната мертвых : роман</p>
--- <p class="author">Тилье Ф.</p>
--- <p class="price">210 ₽</p>
--- </div>');
+-- INSERT INTO kela_data_src(value) values ('<div>
+--     <p>25</p>
+--     <h1>Зарубежные детективы и боевики</h1>
+--     <p class="title">Комната мертвых : роман</p>
+--     <p class="author">Тилье Ф.</p>
+--     <p class="price">210 ₽</p>
+--     </div>');
+
+-- -- добавляем поле даты загрузки
+-- alter table kela_data_src add (load_date date);
+
+-- -- Заполняем дату выгрузки
+-- update 
+--     kela_data_src
+-- set load_date = sysdate - interval '20' day;
+
+-- -- создаём таблицу с метаданными
+-- create table kela_data_metadata (
+--     schema_name varchar(30),
+--     table_name varchar(30),
+--     update_date date
+-- );
+-- insert into 
+--     kela_data_metadata  
+--     (
+--         schema_name,
+--         table_name, 
+--         update_date
+--         )
+-- values
+--     (
+--         'DE3AT',
+--         'KELA_DATA_TARGET',
+--         date'2001-01-01'
+--     )
+
+-- -- создаём временное хранилище
+-- create table 
+--     kela_data_stage as ( 
+--         select * from kela_data_src where 0=1);
+
+-- -- создаём целевую таблицу
+-- create table 
+--     kela_data_target (
+--         book_id number(3), 
+--         category varchar(100),
+--         title varchar(300),
+--         author varchar(50),
+--         price number(7),
+--         load_date date
+--         )
+
+transaction;
+
+-- удаление старых записей из временного хранилища
+delete from 
+    kela_data_stage 
+where 
+    load_date < (
+        select 
+            update_date
+        from 
+            kela_data_metadata
+        where 
+            schema_name='DE3AT'
+            and table_name='KELA_DATA_TARGET'
+        ) - interval '10' day;
+
+
+-- загружаем данные из источника во временное хранилище
+insert into 
+    kela_data_stage (value, load_date)
+select 
+    value, 
+    load_date
+from 
+    kela_data_src
+where load_date > (
+    select 
+        update_date
+    from 
+        kela_data_metadata
+    where schema_name='DE3AT'
+        and table_name='KELA_DATA_TARGET'
+    );
+
+-- передаём данные в целевую таблицу
+insert into 
+    kela_data_target
+        (
+        book_id, 
+        category,
+        title,
+        author,
+        price,
+        load_date
+        )
+-- собираем предварительно подготовленную временную таблицу
+with 
+    pre_data as (
+        select
+            case 
+                when 
+                    instr (value, '<p>') > 0
+                then
+                    to_number (
+                        trim (
+                            substr  (
+                                value,
+                                instr (value, '<p>') + 3,
+                                instr (value, '<', instr (value, '<p>') + 3) - (instr (value, '<p>') + 3))
+                                )
+                        )
+                end as book_id,
+            case 
+                when 
+                    instr (value, '<h1>') > 0
+                then 
+                    trim (
+                        substr  (
+                            value,
+                            instr (value, '<h1>') + 4,
+                            instr (value, '<', instr (value, '<h1>') + 4) - (instr (value, '<h1>') + 4)
+                            )
+                        ) 
+                end as category,
+            case 
+                when 
+                    instr (value, 'title">') > 0
+                then 
+                    trim (
+                        substr  (
+                            value,
+                            instr (value, 'title">') + 7,
+                            instr (value, '<', instr (value, 'title">') + 7) - (instr (value, 'title">') + 7)
+                            )    
+                        ) 
+                end as title,
+            case 
+                when 
+                    instr (value, 'author">') > 0
+                then 
+                    trim (
+                        substr  (
+                            value,
+                            instr (value, 'author">') + 8,
+                            instr (value, '<', instr (value, 'author">') + 8) - (instr (value, 'author">') + 8)
+                            )    
+                        )
+                end as author,
+            case 
+                when 
+                    instr (value, 'price">') > 0
+                then
+                    to_number (
+                        trim (
+                            substr  (
+                                value,
+                                instr (value, 'price">') + 7,
+                                instr (value, '₽', instr (value, 'price">') + 7) - (instr (value, 'price">') + 7)
+                                )    
+                            )    
+                        )
+                end as price,
+            load_date
+        from
+            kela_data_stage
+        where load_date > (
+            select update_date
+            from kela_data_metadata
+            where schema_name='DE3AT'
+                and table_name='KELA_DATA_TARGET'
+            )
+        ),
+    almost_ready_data as (
+        select
+            load_date,
+            book_id, 
+            category,
+            case 
+                -- удаляем ФИО из названия, считаем, что ФИО может быть только в конце строки
+                when 
+                    regexp_instr (title, '(\s[А-ЯA-Z]\.\s[А-ЯA-Z]\.\s|\s[А-ЯA-Z]\.\s)[А-ЯA-Z]+$', 1, 1, 0, 'i') > 0
+                then
+                    trim (regexp_replace (title, '(\s[А-ЯA-Z]\.\s[А-ЯA-Z]\.\s|\s[А-ЯA-Z]\.\s)[А-ЯA-Z]+$', '', 1, 1, 'i'))
+                when 
+                    regexp_instr (title, '\s[А-ЯA-Z]+(\s[А-ЯA-Z]\.\s[А-ЯA-Z]\.|\s[А-ЯA-Z]\.)$', 1, 1, 0, 'i') > 0
+                then
+                    trim (regexp_replace (title, '\s[А-ЯA-Z]+(\s[А-ЯA-Z]\.\s[А-ЯA-Z]\.|\s[А-ЯA-Z]\.)$', '', 1, 1, 'i'))
+                when 
+                    title is null
+                then    -- ищем название в author
+                    case
+                        when 
+                            regexp_instr (author, '[А-ЯA-Z]+(\s[А-ЯA-Z]\.\s[А-ЯA-Z]\.|\s[А-ЯA-Z]\.)$', 1, 1, 0, 'i') > 0
+                        then
+                            trim (regexp_replace (author, '[А-ЯA-Z]+(\s[А-ЯA-Z]\.\s[А-ЯA-Z]\.|\s[А-ЯA-Z]\.)$', '', 1, 1, 'i'))
+                        when 
+                            regexp_instr (author, '([А-ЯA-Z]\.\s[А-ЯA-Z]\.\s|[А-ЯA-Z]\.\s)([А-ЯA-Z]+$|[А-ЯA-Z]+\.)', 1, 1, 0, 'i') > 0
+                        then
+                            trim (regexp_replace (author, '([А-ЯA-Z]\.\s[А-ЯA-Z]\.\s|[А-ЯA-Z]\.\s)([А-ЯA-Z]+$|[А-ЯA-Z]+\.)', '', 1, 1, 'i'))
+                        else
+                            trim (author)                      
+                    end
+                else
+                    title
+            end as title,
+            case 
+                -- очищаем от лишнего
+                when 
+                    regexp_instr (author, '[А-ЯA-Z]+(\s[А-ЯA-Z]\.\s[А-ЯA-Z]\.|\s[А-ЯA-Z]\.)$', 1, 1, 0, 'i') > 0
+                then
+                    trim (substr (author, regexp_instr (author, '[А-ЯA-Z]+(\s[А-ЯA-Z]\.\s[А-ЯA-Z]\.|\s[А-ЯA-Z]\.)$', 1, 1, 0, 'i')))
+                when 
+                    regexp_instr (author, '([А-ЯA-Z]\.\s[А-ЯA-Z]\.\s|[А-ЯA-Z]\.\s)([А-ЯA-Z]+$|[А-ЯA-Z]+\.)', 1, 1, 0, 'i') > 0
+                then
+                    trim (both '.' from (substr (author, regexp_instr (author, '([А-ЯA-Z]\.\s[А-ЯA-Z]\.\s|[А-ЯA-Z]\.\s)([А-ЯA-Z]+$|[А-ЯA-Z]+\.)', 1, 1, 0, 'i'))))
+                when
+                    author is null
+                then    -- ищем автора в title
+                    case
+                        when 
+                            regexp_instr (title, '(\s[А-ЯA-Z]\.\s[А-ЯA-Z]\.\s|\s[А-ЯA-Z]\.\s)[А-ЯA-Z]+$', 1, 1, 0, 'i') > 0
+                        then
+                            trim (substr (title, regexp_instr (title, '(\s[А-ЯA-Z]\.\s[А-ЯA-Z]\.\s|\s[А-ЯA-Z]\.\s)[А-ЯA-Z]+$', 1, 1, 0, 'i')))
+                        when 
+                            regexp_instr (title, '\s[А-ЯA-Z]+(\s[А-ЯA-Z]\.\s[А-ЯA-Z]\.|\s[А-ЯA-Z]\.)$', 1, 1, 0, 'i') > 0
+                        then
+                            trim (substr (title, regexp_instr (title, '\s[А-ЯA-Z]+(\s[А-ЯA-Z]\.\s[А-ЯA-Z]\.|\s[А-ЯA-Z]\.)$', 1, 1, 0, 'i')))
+                    end
+                else
+                    'Unknown'
+            end as author,
+            price
+        from 
+            pre_data
+        ),
+    totally_ready_data as (
+        select 
+            book_id,
+            category,
+            case 
+                when 
+                    instr (title, ' : ') > 0
+                then
+                    substr (title, 0, instr (title, ' : '))
+                else
+                    title
+            end as title,
+            case 
+                -- приводим к единому виду Фамилия И. О.
+                when 
+                    regexp_instr (author, '^([А-ЯA-Z]\.\s[А-ЯA-Z]\.\s|[А-ЯA-Z]\.\s)', 1, 1, 0, 'i') > 0
+                then
+                    regexp_replace (author, '([А-ЯA-Z]\.\s[А-ЯA-Z]\.\s|[А-ЯA-Z]\.\s)(\S*)', '\2 \1')
+                else
+                    author
+            end as author,
+            price,
+            load_date
+        from
+            almost_ready_data
+    )
+select
+    book_id, 
+    category,
+    title,
+    author,
+    price,
+    load_date
+from 
+    totally_ready_data;
+
+-- обновляем метаданные
+update 
+    kela_data_metadata
+set 
+    update_date = (select max(load_date) from kela_data_stage)
+where 
+    schema_name='DE3AT' 
+    and table_name='KELA_DATA_TARGET';
+
+commit;
