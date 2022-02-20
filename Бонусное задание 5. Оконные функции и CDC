@@ -29,7 +29,7 @@ from (
         class,
         effective_from,
         lag (class) over (partition by person order by person, effective_from) as class_lag
-    from 
+    from
         DE3AT.KELA_HISTGROUP
 )
 where 
