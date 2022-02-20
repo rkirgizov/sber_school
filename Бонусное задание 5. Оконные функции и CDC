@@ -1,3 +1,5 @@
+-- Бонусное задание 5. Оконные функции и CDC
+
 -- Возьмите в работу таблицу DE_COMMON.HISTGROUP. Создайте свою SCD2 таблицу DE3AT.XXXX_HISTGROUP.
 ------------------------------------------------------------------------------------------------------
 -- create table kela_histgroup as
@@ -52,11 +54,11 @@
 --     rank_ < 6
 -- order by department_id, rank_
 
-
 -- Для каждого сотрудника выведете, насколько его зарплата отличается от предыдущего по порядку из прошлой задачи внутри департамента
 -- Для каждого сотрудника выведете, какой процент от суммы всех зарплат департамента составляет его зарплата
 -- Для каждого сотрудника по убыванию зарплаты в департаменте вывведете, какая сумма зарплат остаётся в хвосте (то есть сумма зарплат после него)
 -- Для каждого сотрудника в одной таблице выведете, какой процент его зарплата составляет от зарплаты самого дорого сотрудника департамента и во сколько раз его зарплата больше зарплаты самого низкооплачиваемого сотрудника департамента
+
 
 -- Ниже приведён блок кода, заполняющий некоторую таблицу данными, пользуясь кодом с занятия постройте инкрементальную загрузку INSERT обновлений данных в аналог хранилища данных с SCD1 подходом:
 -- - - - на входе - html блоки с данными о пользователях (скрипт заполнения приложил, не забудьте поменять префикс на свой, для упрощения задачи самостоятельно добавьте дату выгрузки как второе поле в таблицу источник)
@@ -70,258 +72,232 @@
 -- 5) в теге с классом price цена книги
 -- Необходимо написать скрипт обработки (transform шаг, запрос), который позволит достать значение из поля value для каждого пункта в отдельную колонку и по возможности очистить и привести к оптимальному типу данных
 
+-- Создаём таблицу
+CREATE TABLE kela_data_src(value varchar(512));
 
--- Бонусное задание 5. Оконные функции и CDC
--- Anatoly Bard
--- •
--- 14 февр. (Изменено: 14 февр.)
--- 1 балл
--- Срок сдачи: 16 февр.
--- Возьмите в работу таблицу DE_COMMON.HISTGROUP. Создайте свою SCD2 таблицу DE3AT.XXXX_HISTGROUP.
--- Выберите из вашей таблицы сведения о разряде сотрудника. Сохраните SCD2 формат.
--- Используя HR.EMPLOYEES отранжируйте пользователей внутри каждого департамента по зарплате, выведете топ 5 самых дорогих для компании сотрудников в каждом департаменте
--- Для каждого сотрудника выведете, насколько его зарплата отличается от предыдущего по порядку из прошлой задачи внутри департамента
--- Для каждого сотрудника выведете, какой процент от суммы всех зарплат департамента составляет его зарплата
--- Для каждого сотрудника по убыванию зарплаты в департаменте вывведете, какая сумма зарплат остаётся в хвосте (то есть сумма зарплат после него)
--- Для каждого сотрудника в одной таблице выведете, какой процент его зарплата составляет от зарплаты самого дорого сотрудника департамента и во сколько раз его зарплата больше зарплаты самого низкооплачиваемого сотрудника департамента
+-- Заполняем данными
+INSERT INTO kela_data_src(value) values ('<div>
+<p>0</p>
+<h1>Литература на английском языке</h1>
+<p class="title">Moab is my Washpot</p>
+<p class="author">Fry S.</p>
+<p class="price">1150 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>1</p>
+<h1>История. Приключения</h1>
+<p class="title">Остров Сокровищ : роман</p>
+<p class="author">Стивенсон Р. Л.</p>
+<p class="price">1480 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>2</p>
+<h1>Современная отечественная проза</h1>
+<p class="title">Тайное имя - ЙХВХ : шпионский роман-фантазия</p>
+<p class="author">Гиршович Л.</p>
+<p class="price">1660 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>3</p>
+<h1>Современная отечественная проза</h1>
+<p class="title">Жених был в весь черных штанах : рассказы</p>
+<p class="author">Добровинский А.</p>
+<p class="price">950 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>4</p>
+<h1>Зарубежные детективы и боевики</h1>
+<p class="title">Грешница : роман</p>
+<p class="author">Герритсен Т.</p>
+<p class="price">210 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>5</p>
+<h1>Зарубежные детективы и боевики</h1>
+<p class="title">Комната мертвых : роман</p>
+<p class="author">Тилье Ф.</p>
+<p class="price">210 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div><p>6</p>
+<h1>Проза</h1>
+<p class="title">Избранный</p>
+<p class="author">Рубенс Б.</p>
+<p class="price">760 ₽</p>
+<div>');
+INSERT INTO kela_data_src(value) values ('
+</div>
+<p>7</p>
+<h1>Фольклор. Мифология. Эпос</h1>
+<p class="title">Русские народные сказки А. Н. Афанасьева </p>
+<p class="price">61400 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>8</
+<h1>Зарубежные детективы и боевики</h1>
+<p class="title">Утраченный символ : роман</p>
+<p class="author">Браун Д.</p>
+<p class="price">310 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>9</p>
+<h1>Зарубежные детективы и боевики</h1>
+<p class="title">Ангелы и демоны : роман</p>
+<p class="author">Браун Д.</p>
+<p class="price">310 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>10</p>
+<h1>Проза</h1>
+<p class="title">Бремя страстей человеческих : роман</p>
+<p class="author">Моэм С.</p>
+<p class="price">340 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>11</p>
+<h1>Юмор. Сатира</h1>
+<p class="title">Супружество как точная наука : рассказы</p>
+<p class="author">О. Генри.</p>
+<p class="price">180 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>12</
+<h1>Зарубежная фантастик</h1>
+<p class="title"></p>
+<p class="author"> Эльфийский рок : антология</p>
+<p class="price">1240 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>13</p>
+<h1>Зарубежные комиксы</h1>
+<p class="title">Реквием. Рыцарь-вампир. Т.3. Битва драконов. Клуб адского пламени : графические романы</p>
+<p class="author">Миллс П.</p>
+<p class="price">1290 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>14</p>
+<h1>Зарубежные комиксы</h1>
+<p class="title">Эххо. Зеркальный мир. Т.3. Секрет прешонов. Далёкий юг : графические романы</p>
+<p class="author">Арлестон К.</p>
+<p class="price">1290 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>15</p>
+<h1>Современная отечественная проза</h1>
+<p class="title">Два маленьких романа</p>
+<p class="author">Гришковец Е. В.</p>
+<p class="price">520 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>16</p>
+<h1>Зарубежные детективы и боевики</h1>
+<p class="title">Двойник : роман</p>
+<p class="author">Герритсен Т.</p>
+<p class="price">210 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>17</p>
+<h1>Зарубежные детективы и боевики</h1>
+<p class="title">Головоломка : роман</p>
+<p class="author">Тилье Ф.</p>
+<p class="price">210 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>19</p>
+<h1>Художественная публицистика</h1>
+<p class="title">Записные книжки</p>
+<p class="author">Довлатов С.</p>
+<p class="price">400 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>20</p>
+<h1>Литература на английском языке</h1>
+<p class="title">Moab is my Washpot</p>
+<p class="author">Fry S.</p>
+<p class="price">1150 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>21</p>
+<h1>История. Приключения</h1>
+<p class="title">Остров Сокровищ : роман</p>
+<p class="author">Стивенсон Р. Л.</p>
+<p class="price">1480 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>22</p>
+<h1>Современная отечественная проза</h1>
+<p class="title">Тайное имя - ЙХВХ : шпионский роман-фантазия</p>
+<p class="author">Гиршович Л.</p>
+<p class="price">1660 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>23</p>
+<h1>Современная отечественная проза</h1>
+<p class="title">Жених был в весь черных штанах : рассказы</p>
+<p class="author">Добровинский А.</p>
+<p class="price">950 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>24</p>
+<h1>Зарубежные детективы и боевики</h1>
+<p class="title">Грешница : роман</p>
+<p class="author">Герритсен Т.</p>
+<p class="price">210 ₽</p>
+</div>');
+INSERT INTO kela_data_src(value) values ('<div>
+<p>25</p>
+<h1>Зарубежные детективы и боевики</h1>
+<p class="title">Комната мертвых : роман</p>
+<p class="author">Тилье Ф.</p>
+<p class="price">210 ₽</p>
+</div>');
 
--- Ниже приведён блок кода, заполняющий некоторую таблицу данными, пользуясь кодом с занятия постройте инкрементальную загрузку INSERT обновлений данных в аналог хранилища данных с SCD1 подходом:
--- - - - на входе - html блоки с данными о пользователях (скрипт заполнения приложил, не забудьте поменять префикс на свой, для упрощения задачи самостоятельно добавьте дату выгрузки как второе поле в таблицу источник)
--- - - - на выходе ожидается таблица с полями из исходных блоков с очищенными данными, при этом с некоторым флагом даты обновления
--- - - - используйте staging и target таблицы, опишите шаги в транзакции, протестируйте ваш код на нескольких итерациях добавления данных, приложите скрипт для теста
--- "Легенда" для задания: мы спарсили данные с сайта книжного магазина, однако получилось не очень =( необходимо вычленить из HTML тегов информацию следующим образом
--- 1) в первом теге id книги
--- 2) в теге h1 категория
--- 3) в теге с классом title название книги
--- 4) в теге с классом author автор книги
--- 5) в теге с классом price цена книги
--- Необходимо написать скрипт обработки (transform шаг, запрос), который позволит достать значение из поля value для каждого пункта в отдельную колонку и по возможности очистить и привести к оптимальному типу данных
+-- добавляем поле даты загрузки
+alter table kela_data_src add (load_date date);
 
+-- Заполняем первичную дату выгрузки
+update 
+    kela_data_src
+set load_date = sysdate - interval '20' day;
 
+-- создаём таблицу с метаданными, инициируем первичную дату обновления
+create table kela_data_metadata (
+    schema_name varchar(30),
+    table_name varchar(30),
+    update_date date
+);
+insert into 
+    kela_data_metadata  
+    (
+        schema_name,
+        table_name, 
+        update_date
+        )
+values
+    (
+        'DE3AT',
+        'KELA_DATA_TARGET',
+        date'2001-01-01'
+    )
 
--- -- Создаём таблицу
--- CREATE TABLE kela_data_src(value varchar(512));
+-- создаём временное хранилище
+create table 
+    kela_data_stage as ( 
+        select * from kela_data_src where 0=1);
 
--- -- Заполняем данными
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>0</p>
--- <h1>Литература на английском языке</h1>
--- <p class="title">Moab is my Washpot</p>
--- <p class="author">Fry S.</p>
--- <p class="price">1150 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>1</p>
--- <h1>История. Приключения</h1>
--- <p class="title">Остров Сокровищ : роман</p>
--- <p class="author">Стивенсон Р. Л.</p>
--- <p class="price">1480 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>2</p>
--- <h1>Современная отечественная проза</h1>
--- <p class="title">Тайное имя - ЙХВХ : шпионский роман-фантазия</p>
--- <p class="author">Гиршович Л.</p>
--- <p class="price">1660 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>3</p>
--- <h1>Современная отечественная проза</h1>
--- <p class="title">Жених был в весь черных штанах : рассказы</p>
--- <p class="author">Добровинский А.</p>
--- <p class="price">950 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>4</p>
--- <h1>Зарубежные детективы и боевики</h1>
--- <p class="title">Грешница : роман</p>
--- <p class="author">Герритсен Т.</p>
--- <p class="price">210 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>5</p>
--- <h1>Зарубежные детективы и боевики</h1>
--- <p class="title">Комната мертвых : роман</p>
--- <p class="author">Тилье Ф.</p>
--- <p class="price">210 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div><p>6</p>
--- <h1>Проза</h1>
--- <p class="title">Избранный</p>
--- <p class="author">Рубенс Б.</p>
--- <p class="price">760 ₽</p>
--- <div>');
--- INSERT INTO kela_data_src(value) values ('
--- </div>
--- <p>7</p>
--- <h1>Фольклор. Мифология. Эпос</h1>
--- <p class="title">Русские народные сказки А. Н. Афанасьева </p>
--- <p class="price">61400 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>8</
--- <h1>Зарубежные детективы и боевики</h1>
--- <p class="title">Утраченный символ : роман</p>
--- <p class="author">Браун Д.</p>
--- <p class="price">310 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>9</p>
--- <h1>Зарубежные детективы и боевики</h1>
--- <p class="title">Ангелы и демоны : роман</p>
--- <p class="author">Браун Д.</p>
--- <p class="price">310 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>10</p>
--- <h1>Проза</h1>
--- <p class="title">Бремя страстей человеческих : роман</p>
--- <p class="author">Моэм С.</p>
--- <p class="price">340 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>11</p>
--- <h1>Юмор. Сатира</h1>
--- <p class="title">Супружество как точная наука : рассказы</p>
--- <p class="author">О. Генри.</p>
--- <p class="price">180 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>12</
--- <h1>Зарубежная фантастик</h1>
--- <p class="title"></p>
--- <p class="author"> Эльфийский рок : антология</p>
--- <p class="price">1240 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>13</p>
--- <h1>Зарубежные комиксы</h1>
--- <p class="title">Реквием. Рыцарь-вампир. Т.3. Битва драконов. Клуб адского пламени : графические романы</p>
--- <p class="author">Миллс П.</p>
--- <p class="price">1290 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>14</p>
--- <h1>Зарубежные комиксы</h1>
--- <p class="title">Эххо. Зеркальный мир. Т.3. Секрет прешонов. Далёкий юг : графические романы</p>
--- <p class="author">Арлестон К.</p>
--- <p class="price">1290 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>15</p>
--- <h1>Современная отечественная проза</h1>
--- <p class="title">Два маленьких романа</p>
--- <p class="author">Гришковец Е. В.</p>
--- <p class="price">520 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>16</p>
--- <h1>Зарубежные детективы и боевики</h1>
--- <p class="title">Двойник : роман</p>
--- <p class="author">Герритсен Т.</p>
--- <p class="price">210 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>17</p>
--- <h1>Зарубежные детективы и боевики</h1>
--- <p class="title">Головоломка : роман</p>
--- <p class="author">Тилье Ф.</p>
--- <p class="price">210 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>19</p>
--- <h1>Художественная публицистика</h1>
--- <p class="title">Записные книжки</p>
--- <p class="author">Довлатов С.</p>
--- <p class="price">400 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>20</p>
--- <h1>Литература на английском языке</h1>
--- <p class="title">Moab is my Washpot</p>
--- <p class="author">Fry S.</p>
--- <p class="price">1150 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>21</p>
--- <h1>История. Приключения</h1>
--- <p class="title">Остров Сокровищ : роман</p>
--- <p class="author">Стивенсон Р. Л.</p>
--- <p class="price">1480 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>22</p>
--- <h1>Современная отечественная проза</h1>
--- <p class="title">Тайное имя - ЙХВХ : шпионский роман-фантазия</p>
--- <p class="author">Гиршович Л.</p>
--- <p class="price">1660 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>23</p>
--- <h1>Современная отечественная проза</h1>
--- <p class="title">Жених был в весь черных штанах : рассказы</p>
--- <p class="author">Добровинский А.</p>
--- <p class="price">950 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
--- <p>24</p>
--- <h1>Зарубежные детективы и боевики</h1>
--- <p class="title">Грешница : роман</p>
--- <p class="author">Герритсен Т.</p>
--- <p class="price">210 ₽</p>
--- </div>');
--- INSERT INTO kela_data_src(value) values ('<div>
---     <p>25</p>
---     <h1>Зарубежные детективы и боевики</h1>
---     <p class="title">Комната мертвых : роман</p>
---     <p class="author">Тилье Ф.</p>
---     <p class="price">210 ₽</p>
---     </div>');
+-- создаём целевую таблицу
+create table 
+    kela_data_target (
+        book_id number(3), 
+        category varchar(100),
+        title varchar(300),
+        author varchar(50),
+        price number(7),
+        load_date date
+        )
 
--- -- добавляем поле даты загрузки
--- alter table kela_data_src add (load_date date);
-
--- -- Заполняем дату выгрузки
--- update 
---     kela_data_src
--- set load_date = sysdate - interval '20' day;
-
--- -- создаём таблицу с метаданными
--- create table kela_data_metadata (
---     schema_name varchar(30),
---     table_name varchar(30),
---     update_date date
--- );
--- insert into 
---     kela_data_metadata  
---     (
---         schema_name,
---         table_name, 
---         update_date
---         )
--- values
---     (
---         'DE3AT',
---         'KELA_DATA_TARGET',
---         date'2001-01-01'
---     )
-
--- -- создаём временное хранилище
--- create table 
---     kela_data_stage as ( 
---         select * from kela_data_src where 0=1);
-
--- -- создаём целевую таблицу
--- create table 
---     kela_data_target (
---         book_id number(3), 
---         category varchar(100),
---         title varchar(300),
---         author varchar(50),
---         price number(7),
---         load_date date
---         )
-
+------------------------------------------------------------------------------
+-- начало транзакции
+------------------------------------------------------------------------------
 transaction;
 
 -- удаление старых записей из временного хранилища
@@ -337,7 +313,6 @@ where
             schema_name='DE3AT'
             and table_name='KELA_DATA_TARGET'
         ) - interval '10' day;
-
 
 -- загружаем данные из источника во временное хранилище
 insert into 
@@ -552,4 +527,83 @@ where
     schema_name='DE3AT' 
     and table_name='KELA_DATA_TARGET';
 
+-- подтверждаем запись
 commit;
+
+------------------------------------------------------------------------------
+-- конец транзакции
+------------------------------------------------------------------------------
+
+-- проверяем заполнение
+select 
+    * 
+from 
+    kela_data_target
+order by
+    load_date desc;
+
+-- новые записи для проверки работы транзакции
+INSERT INTO kela_data_src(value, load_date) values ('<div>
+    <p>26</p>
+    <h1>Историческое</h1>
+    <p class="title">Разруха в головах А. Иванова</p>
+    <p class="author"></p>
+    <p class="price">53 ₽</p>
+    </div>',
+    sysdate - interval '8' day);
+INSERT INTO kela_data_src(value, load_date) values ('<div>
+    <p>27</p>
+    <h1>Фэнтези</h1>
+    <p class="title">Вася в королевстве гномов B. Gorgona</p>
+    <p class="author"></p>
+    <p class="price">313 ₽</p>
+    </div>',
+    sysdate - interval '7' day);
+INSERT INTO kela_data_src(value, load_date) values ('<div>
+    <p>28</p>
+    <h1>Ужасы</h1>
+    <p class="title">Чёрная вода</p>
+    <p class="author">А. А. Сердюк</p>
+    <p class="price">3477₽</p>
+    </div>',
+    sysdate - interval '1' day);
+INSERT INTO kela_data_src(value, load_date) values ('<div>
+    <p>29</p>
+    <h1>Детские</h1>
+    <p class="title">Весёлые гости : рассказы B. J. Gordon</p>
+    <p class="author"></p>
+    <p class="price">63 ₽</p>
+    </div>',
+    sysdate - interval '2' day);
+    INSERT INTO kela_data_src(value, load_date) values ('<div>
+    <p>30</p>
+    <h1>Стихи</h1>
+    <p class="title">Ивашкины радости </p>
+    <p class="author">Иванова А.</p>
+    <p class="price">754₽</p>
+    </div>',
+    sysdate - interval '3' day);
+INSERT INTO kela_data_src(value, load_date) values ('<div>
+    <p>31</p>
+    <h1>Фантастика</h1>
+    <p class="title">Во дворе дома : пьеса № 14 Gorgona B.</p>
+    <p class="author"></p>
+    <p class="price">12 ₽</p>
+    </div>',
+    sysdate - interval '4' day);
+INSERT INTO kela_data_src(value, load_date) values ('<div>
+    <p>32</p>
+    <h1>Проза</h1>
+    <p class="title">На серъёзных щах т.5 Иванова А. А.</p>
+    <p class="author"></p>
+    <p class="price">7443 ₽</p>
+    </div>',
+    sysdate - interval '5' day);
+INSERT INTO kela_data_src(value, load_date) values ('<div>
+    <p>33</p>
+    <h1>История</h1>
+    <p class="title">Клавиатура с едой : роман Gordon B. J. </p>
+    <p class="author">B. J. Gordon </p>
+    <p class="price">235₽</p>
+    </div>',
+    sysdate);
