@@ -5,7 +5,37 @@
 
 -- Знакомство с БД оператора:
 -- Какая расценка действует на этот момент на исходящие звонки по разным тарифным планам? А на SMS?
+----------------------------------------------------------------------------------------------------
+select
+    types.rate_type_desc || ' (' || rates.rate_name || ')' as tarif,
+    max(items.cost) as current_cost
+from
+    baratin.rate_items items
+inner join
+    baratin.rates rates
+    on items.rate = rates.rate_id
+inner join
+    baratin.rate_types types
+    on items.type = types.rate_type_id
+where 
+    -- получаем часы и минуты дня
+    extract (hour from systimestamp) * 3600 + extract (minute from systimestamp) * 60 
+        between items.from_time and items.to_time 
+    -- сравниваем день недели
+    and (items.day_of_week = to_number (to_char (sysdate,'D')) or day_of_week is null)
+    and items.type in (2,3,4)
+group by 
+    types.rate_type_desc || ' (' || rates.rate_name || ')'
+order by 
+    tarif
+    
+    
 -- Создайте таблицу: колонки – дни недели, строки – часовой диапазон (0:00-1:00), поля – тариф на исходящий звонок в этот период.
+----------------------------------------------------------------------------------------------------
+
+
+
+
 -- Выведите дату и сумму последнего платежа по каждому номеру телефона.
 
 
