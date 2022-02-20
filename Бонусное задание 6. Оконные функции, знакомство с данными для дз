@@ -120,7 +120,24 @@ order by
 
 
 -- Выведите дату и сумму последнего платежа по каждому номеру телефона.
-
+----------------------------------------------------------------------------------------------------
+with 
+    payments as (
+        select 
+            phone,
+            create_dt,
+            value,
+            row_number() over (partition by phone order by create_dt desc) as row_num 
+        from baratin.payment_logs
+        )
+select 
+    phone,
+    create_dt as payment_date,
+    value as payment
+from 
+    payments
+where 
+    row_num = 1
 
 
 -- Продолжение задания про таблицу DE3AT.XXXX_SALARY_HIST, где XXXX - ваш идентификатор.
