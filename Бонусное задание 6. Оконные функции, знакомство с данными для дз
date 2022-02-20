@@ -32,8 +32,91 @@ order by
     
 -- Создайте таблицу: колонки – дни недели, строки – часовой диапазон (0:00-1:00), поля – тариф на исходящий звонок в этот период.
 ----------------------------------------------------------------------------------------------------
+alter session set NLS_DATE_FORMAT = 'DD-MM-YYYY HH24:MI:SS';
 
-
+with 
+    hours as (
+        select
+            to_date('00:00:00', 'HH24:MI:SS') 
+            + (level - 1)/24 as hour_
+        from dual
+        connect by
+            to_date('23:00:00', 'HH24:MI:SS') 
+            - to_date('00:00:00', 'HH24:MI:SS') 
+            >= (level - 1)/24
+        )
+select
+    items.type,
+    types.rate_type_desc as tarif,
+    to_char(hours.hour_,'hh24') as hour_,
+    (select 
+        min(cost) 
+    from baratin.rate_items 
+    where 
+        day_of_week = 1
+        and to_char(hours.hour_,'hh24') * 3600 + 100 between from_time and to_time 
+        and baratin.rate_items.type in (items.type)
+    ) as mon_,
+    (select 
+        min(cost) 
+    from baratin.rate_items 
+    where 
+        day_of_week = 2
+        and to_char(hours.hour_,'hh24') * 3600 + 100 between from_time and to_time 
+        and baratin.rate_items.type in (items.type)
+    ) as tue_,
+    (select 
+        min(cost) 
+    from baratin.rate_items 
+    where 
+        day_of_week = 3
+        and to_char(hours.hour_,'hh24') * 3600 + 100 between from_time and to_time 
+        and baratin.rate_items.type in (items.type)
+    ) as wed_,
+    (select 
+        min(cost) 
+    from baratin.rate_items 
+    where 
+        day_of_week = 4
+        and to_char(hours.hour_,'hh24') * 3600 + 100 between from_time and to_time 
+        and baratin.rate_items.type in (items.type)
+    ) as thu_,
+    (select 
+        min(cost) 
+    from baratin.rate_items 
+    where 
+        day_of_week = 5
+        and to_char(hours.hour_,'hh24') * 3600 + 100 between from_time and to_time 
+        and baratin.rate_items.type in (items.type)
+    ) as fri_,
+    (select 
+        min(cost) 
+    from baratin.rate_items 
+    where 
+        day_of_week = 6
+        and to_char(hours.hour_,'hh24') * 3600 + 100 between from_time and to_time 
+        and baratin.rate_items.type in (items.type)
+    ) as sat_,
+    (select 
+        min(cost) 
+    from baratin.rate_items 
+    where 
+        day_of_week = 7
+        and to_char(hours.hour_,'hh24') * 3600 + 100 between from_time and to_time 
+        and baratin.rate_items.type in (items.type)
+    ) as sun_
+from
+    hours 
+left join
+    baratin.rate_items items
+    on items.type in (2,4)
+inner join
+    baratin.rate_types types
+    on items.type = types.rate_type_id
+group by
+    to_char(hours.hour_,'hh24'), types.rate_type_desc, items.type
+order by 
+    tarif, hour_
 
 
 -- Выведите дату и сумму последнего платежа по каждому номеру телефона.
