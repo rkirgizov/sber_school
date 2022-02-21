@@ -4,24 +4,81 @@
 
 -- Создайте представление, показывающее накопленную сумму на каждую дату. Выдача должна быть отсортирована по дате, не используйте window function
 -----------------------------------------------------------------------------------------------------------------
+select 
+    dt, 
+    max (val) as val, 
+    (select 
+        sum (val) 
+    from 
+        DE_COMMON.CUMULATIVE_SUM 
+    where 
+        dt <= csum.dt) as cumulative
+from 
+    DE_COMMON.CUMULATIVE_SUM csum
+group by
+    dt
+order by
+    dt;
+    
 
-
-Сложная версия: добавляется поле ID, cumulative_sum_mult, необходимо составить сумму и даты для каждого пользователя независимо, отсортировать по id + дате
+-- Сложная версия: добавляется поле ID, cumulative_sum_mult, необходимо составить сумму и даты для каждого пользователя независимо, отсортировать по id + дате
 -----------------------------------------------------------------------------------------------------------------
+select 
+    dt, 
+    id,
+    val, 
+    sum (val) over (partition by id order by id, dt) as cumulative
+from 
+    DE_COMMON.CUMULATIVE_SUM_MULT;
 
-
-Превратите полученную таблицу в SCD с датами effective_from и effective_to, за бесконечность принимаем конец 2999 года, за "минус бесконечность" можно принять начало 1900 года при необходимости.
+-- Превратите полученную таблицу в SCD с датами effective_from и effective_to, за бесконечность принимаем конец 2999 года, за "минус бесконечность" можно принять начало 1900 года при необходимости.
 -----------------------------------------------------------------------------------------------------------------
+select 
+    id,
+    val,     
+    sum (val) over (partition by id order by dt) as cumulative,
+    dt as effective_from, 
+    coalesce (lead (dt) over (partition by id order by dt) - interval '1' second, 
+        to_date ('31122999', 'DDMMYYYY')) as effective_to   
+from 
+    DE_COMMON.CUMULATIVE_SUM_MULT;
+    
 
-
-В таблице DE_COMMON.cycling лежат результаты 21 этапа Тур де Франс. Расставьте места.
+-- В таблице DE_COMMON.cycling лежат результаты 21 этапа Тур де Франс. Расставьте места.
 -----------------------------------------------------------------------------------------------------------------
+select
+    dense_rank() over (order by 
+        regexp_replace (time, '[^0-9]', '')) as rank,
+    cyc.*
+from
+    DE_COMMON.CYCLING cyc;
+    
 
-
-Выведите имена покупателей (oe.customers), которые совершили заказ (oe.orders) с возрастанием суммы (более поздний заказ на большую сумму, чем более ранний).
+-- Выведите имена покупателей (oe.customers), которые совершили заказ (oe.orders) с возрастанием суммы (более поздний заказ на большую сумму, чем более ранний).
 -----------------------------------------------------------------------------------------------------------------
+select
+    cust_last_name,
+    cust_first_name
+from (
+    select
+        customer_id,
+        to_date (order_date) as order_date,
+        order_total,
+        lead (order_total) over (partition by
+            customer_id order by order_date) as lead_order_total
+    from
+        oe.orders
+    ) lead_tbl
+join
+    oe.customers cus
+    on cus.customer_id = lead_tbl.customer_id
+where
+    lead_tbl.lead_order_total > order_total
+group by
+    cust_last_name,
+    cust_first_name;
 
 
-Задачки про восстановление SCD2 из HISTGROUP пойдут в следующую большую домашку :) можете потренироваться, составив SCD2 по DE_COMMON.HISTGROUP
+-- Задачки про восстановление SCD2 из HISTGROUP пойдут в следующую большую домашку :) можете потренироваться, составив SCD2 по DE_COMMON.HISTGROUP
 -----------------------------------------------------------------------------------------------------------------
-
+-- Задание по HISTGROUP выполнено в бонусном задании 5.
