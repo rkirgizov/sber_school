@@ -1,8 +1,254 @@
-Найдите как можно больше валидных и как можно меньше невалидных дат в DE_COMMON.DATES. Оставьте их в типе VARCHAR2 (можно собирать условия через and, в простой вариации оставьте строки как есть, отфильтровав строки с некорректными датами, посложнее - найдите сами даты в текстовом формате как можно больше, самый сложный вариант - вытащите даже те даты, которых несколько в одной строке (обратите внимание, что вариант "хакнуть" конкретные данные плохой, если берётесь за такой вариант выдайте универсальное решение))
-В предыдущем задании преобразуйте даты к типу date
-Создать таблицу с констрейнтом NOT NULL. Записать туда NULL. Снять констрейнт.
-Создать таблицу с констрейнтом UNIQUE и записать туда одинаковые значения. Какая ошибка?
-Создать таблицу без констрейнтов и наложить констрейнт NOT NULL, причем в двух случаях – когда в таблице есть NULL и когда нет.
-Создать две таблицы и связать их FOREIGN KEY. Попытаться сослаться на поле, не являющееся PRIMARY KEY. Вставить в таблицу с FOREIGN KEY значение, отсутствующее в справочнике.
-Создать таблицу с констрейнтом CHECK на какое-либо из полей, попытаться записать значение, не проходящее проверку
-Создать таблицу с DEFAULT значением на каком-либо поле, записать null в это поле.
+-- Найдите как можно больше валидных и как можно меньше невалидных дат в DE_COMMON.DATES. Оставьте их в типе VARCHAR2 (можно собирать условия через and, в простой вариации оставьте строки как есть, отфильтровав строки с некорректными датами, посложнее - найдите сами даты в текстовом формате как можно больше, самый сложный вариант - вытащите даже те даты, которых несколько в одной строке (обратите внимание, что вариант "хакнуть" конкретные данные плохой, если берётесь за такой вариант выдайте универсальное решение))
+--------------------------------------------------------------------------------------------------------
+alter session set nls_date_format = 'DD-MM-YYYY';
+
+with 
+    -- вытаскиваем даты из строк
+    like_dates as (
+        select distinct
+            regexp_substr (val, '(\d{1,2}/\d{1,2}/\d{2,4}|\d{1,2}\.\d{1,2}\.\d{2,4}|\d{1,2}-\w{3}-\d{2,4})', 1, level) as like_date
+        from 
+            DE_COMMON.DATES
+        connect by 
+            level <= regexp_count (val, '(\d{1,2}/\d{1,2}/\d{2,4}|\d{1,2}\.\d{1,2}\.\d{2,4}|\d{1,2}-\w{3}-\d{2,4})')
+    ),
+    -- разбиваем на дни, месяцы, годы для последующей проверки (исходим из очерёдности ДДММГГГГ)
+    separate_dates as (
+        select
+            like_date,
+            substr(like_date, 1, regexp_instr(like_date, '(/|-|\.)', 1, 1) - 1) as day_,
+            substr(like_date, regexp_instr(like_date, '(/|-|\.)', 1, 1) + 1, 
+                                regexp_instr(like_date, '(/|-|\.)', 1, 2) - regexp_instr(like_date, '(/|-|\.)', 1, 1) - 1) as month_,
+            substr(like_date, regexp_instr(like_date, '(/|-|\.)', 1, 2) + 1) as year_
+        from
+            like_dates
+    ),
+    -- проверяем даты
+    validate_dates as (
+        select 
+            like_date,
+            case
+                when length (year_) = 3
+                    then '! invalid year'
+                when length (month_) = 3 and not regexp_like (lower(month_), '(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)')
+                    then '! invalid month'
+                when length (month_) <= 2 and to_number(month_) not between 1 and 12
+                    then '! invalid month'
+                when day_ > extract (day from (last_day (to_date (month_ || '-' || year_, 'MM-RRRR'))))
+                    then '! invalid day'
+                else 'valid'                    
+            end as validation
+        from
+            separate_dates
+    )
+select
+    *
+from
+    validate_dates;
+    
+
+-- В предыдущем задании преобразуйте даты к типу date
+--------------------------------------------------------------------------------------------------------
+alter session set nls_date_format = 'DD-MM-YYYY';
+
+with 
+    -- вытаскиваем даты из строк
+    like_dates as (
+        select distinct
+            regexp_substr (val, '(\d{1,2}/\d{1,2}/\d{2,4}|\d{1,2}\.\d{1,2}\.\d{2,4}|\d{1,2}-\w{3}-\d{2,4})', 1, level) as like_date
+        from 
+            DE_COMMON.DATES
+        connect by 
+            level <= regexp_count (val, '(\d{1,2}/\d{1,2}/\d{2,4}|\d{1,2}\.\d{1,2}\.\d{2,4}|\d{1,2}-\w{3}-\d{2,4})')
+    ),
+    -- разбиваем на дни, месяцы, годы для последующей проверки (исходим из очерёдности ДДММГГГГ)
+    separate_dates as (
+        select
+            like_date,
+            substr(like_date, 1, regexp_instr(like_date, '(/|-|\.)', 1, 1) - 1) as day_,
+            substr(like_date, regexp_instr(like_date, '(/|-|\.)', 1, 1) + 1, 
+                                regexp_instr(like_date, '(/|-|\.)', 1, 2) - regexp_instr(like_date, '(/|-|\.)', 1, 1) - 1) as month_,
+            substr(like_date, regexp_instr(like_date, '(/|-|\.)', 1, 2) + 1) as year_
+        from
+            like_dates
+    ),
+    -- проверяем даты
+    validate_dates as (
+        select 
+            day_ || '-' || month_ || '-' || year_ as dt_char,
+            case
+                when length (year_) = 3
+                    then '! invalid year'
+                when length (month_) = 3 and not regexp_like (lower(month_), '(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)')
+                    then '! invalid month'
+                when length (month_) <= 2 and to_number(month_) not between 1 and 12
+                    then '! invalid month'
+                when day_ > extract (day from (last_day (to_date (month_ || '-' || year_, 'MM-RRRR'))))
+                    then '! invalid day'
+                else 'valid'                    
+            end as validation
+        from
+            separate_dates
+    )
+select
+    dt_char,
+    to_date (dt_char, 'DD-MM-RRRR') as dt_date
+from
+    validate_dates
+where 
+    validation = 'valid'
+order by 
+    dt_date;
+    
+
+-- Создать таблицу с констрейнтом NOT NULL. Записать туда NULL. Снять констрейнт.
+--------------------------------------------------------------------------------------------------------
+create table 
+    kela_test_ddl (
+        notnull_ varchar2(20) not null);
+
+insert into 
+    kela_test_ddl (notnull_) 
+values 
+    (null);
+-- ORA-01400: cannot insert NULL into ("DE3AT"."KELA_TEST_DDL"."NOTNULL_")
+
+alter table 
+    kela_test_ddl 
+modify 
+    (notnull_ null);
+
+insert into 
+    kela_test_ddl (notnull_) 
+values 
+    (null);
+-- 1 row created.
+
+insert into 
+    kela_test_ddl (notnull_) 
+values 
+    ('test');
+-- 1 row created.
+
+
+-- Создать таблицу с констрейнтом UNIQUE и записать туда одинаковые значения. Какая ошибка?
+--------------------------------------------------------------------------------------------------------
+create table 
+    kela_test_ddl (
+        unique_ number(10, 0) unique);
+
+insert into 
+    kela_test_ddl (unique_) 
+values 
+    (3);
+-- 1 row created.
+insert into 
+    kela_test_ddl (unique_) 
+values 
+    (3);
+-- ORA-00001: unique constraint (DE3AT.SYS_C0087131) violated
+
+
+-- Создать таблицу без констрейнтов и наложить констрейнт NOT NULL, причем в двух случаях – когда в таблице есть NULL и когда нет.
+--------------------------------------------------------------------------------------------------------
+create table 
+    kela_test_ddl (
+        not_constraint_ number(10, 0));
+
+insert into 
+    kela_test_ddl (not_constraint_) 
+values 
+    (null);
+-- 1 row created.
+
+alter table 
+    kela_test_ddl 
+modify 
+    (not_constraint_ not null);
+-- ORA-02296: cannot enable (DE3AT.) - null values found
+
+update
+    kela_test_ddl
+set not_constraint_ = 3;
+-- 1 row updated.
+
+alter table 
+    kela_test_ddl 
+modify 
+    (not_constraint_ not null);
+-- Table altered.
+
+
+-- Создать две таблицы и связать их FOREIGN KEY. Попытаться сослаться на поле, не являющееся PRIMARY KEY. Вставить в таблицу с FOREIGN KEY значение, отсутствующее в справочнике.
+--------------------------------------------------------------------------------------------------------
+create table kela_test_ddl_primary (
+	primary_id number(10, 0) not null,
+    any_field number(10, 0),
+	constraint primary_PK primary key (primary_id));
+
+create table kela_test_ddl_foreign (
+	foreign_id number(10, 0) not null,
+	primary_id number(10, 0) not null);
+
+alter table kela_test_ddl_foreign 
+	add constraint foreign_fk1 
+	foreign key (primary_id) 
+	references kela_test_ddl_primary(primary_id);
+
+alter table kela_test_ddl_foreign 
+	add constraint foreign_fk2 
+	foreign key (primary_id) 
+	references kela_test_ddl_primary(any_field);
+-- ORA-02270: no matching unique or primary key for this column-list
+
+insert into 
+    kela_test_ddl_primary (primary_id, any_field) 
+values 
+    (1, 11111);
+insert into 
+    kela_test_ddl_primary (primary_id, any_field) 
+values 
+    (2, 22222);
+
+insert into 
+    kela_test_ddl_foreign (foreign_id, primary_id) 
+values 
+    (1, 3);
+-- ORA-02291: integrity constraint (DE3AT.FOREIGN_FK1) violated - parent key not found
+
+
+-- Создать таблицу с констрейнтом CHECK на какое-либо из полей, попытаться записать значение, не проходящее проверку
+--------------------------------------------------------------------------------------------------------
+create table kela_test_ddl (
+	check_ number(10, 0),
+	constraint check_CH CHECK (check_ is not null and check_ between 1 and 100));
+
+insert into 
+    kela_test_ddl (check_) 
+values 
+    (50);
+-- 1 row created.
+
+insert into 
+    kela_test_ddl (check_) 
+values 
+    (101);
+-- ORA-02290: check constraint (DE3AT.CHECK_CH) violated
+
+insert into 
+    kela_test_ddl (check_) 
+values 
+    (null);
+-- ORA-02290: check constraint (DE3AT.CHECK_CH) violated
+
+
+-- Создать таблицу с DEFAULT значением на каком-либо поле, записать null в это поле.
+--------------------------------------------------------------------------------------------------------
+create table kela_test_ddl (
+	default_ number(10, 0) default 50);
+
+insert into 
+    kela_test_ddl (default_) 
+values 
+    (null);
+-- 1 row created.
