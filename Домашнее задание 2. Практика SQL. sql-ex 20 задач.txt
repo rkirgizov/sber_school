@@ -1,0 +1,139 @@
+1
+Select model, speed, hd
+from 
+pc
+where
+price < 500
+
+2
+select distinct maker from product where type = 'printer'
+
+3
+Select model, ram, screen 
+from laptop
+where price > 1000
+
+4
+Select * from printer where color = 'y'
+
+5
+Select model, speed, hd
+from pc
+where (cd = '12x' or cd = '24x') and price < 600
+
+6
+Select distinct pr.maker, la.speed
+from product as pr
+join laptop as la on pr.model = la.model
+where hd >= 10
+
+7
+Select la.model, la.price 
+from product as pr
+join laptop as la on pr.model = la.model
+where pr.maker = 'B'
+union
+Select pc.model, pc.price 
+from product as pr
+join pc on pr.model = pc.model
+where pr.maker = 'B'
+union
+Select prin.model, prin.price 
+from product as pr
+join printer as prin on pr.model = prin.model
+where pr.maker = 'B'
+
+8
+SELECT distinct maker
+FROM product 
+where type = 'pc'
+and maker not in (SELECT distinct maker
+FROM product 
+where type = 'laptop')
+
+9
+select 
+ distinct maker 
+from 
+ product
+join 
+ pc on product.model = pc.model
+where 
+ pc.speed >= 450
+
+10
+Select model, price from printer
+where price in (
+select max(price) from printer
+)
+
+11
+Select avg(speed) from pc
+
+12
+Select avg(speed) from laptop where price > 1000
+
+13
+Select avg(speed) from product
+join 
+pc on product.model = pc.model
+where product.maker = 'A'
+
+14
+Select cl.class, sh.name, cl.country from ships as sh
+join 
+classes as cl on cl.class = sh.class
+where numGuns >= 10
+
+15
+Select hd
+from PC
+group by hd
+having count(hd) >= 2
+
+16
+select distinct p1.model, p2.model, p1.speed, p1.ram
+from pc p1, pc p2
+where
+p1.speed = p2.speed
+and
+p1.ram = p2.ram
+and p1.model > p2.model
+
+17
+Select distinct pr.type, la.model, la.speed from product pr, laptop la
+where 
+ la.speed < ALL (select speed from pc) 
+and 
+ pr.type = 'laptop' 
+and 
+ pr.model = la.model
+
+18
+Select distinct p1.maker, p2.price
+from 
+ product p1
+join 
+ printer p2 on p1.model = p2.model
+where 
+ p2.color = 'y'
+and
+ p2.price in (select min(price) from printer where color = 'y')
+
+19
+Select pr.maker, avg(la.screen) as avg_screen
+from 
+ product pr
+join
+ laptop la on pr.model = la.model
+group by pr.maker
+
+20
+Select maker, count(model) as count_model
+from
+ product
+where
+ type = 'pc'
+group by 
+ maker
+having count(model) >= 3
