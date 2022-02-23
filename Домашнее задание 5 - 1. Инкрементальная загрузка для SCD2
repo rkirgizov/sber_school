@@ -89,7 +89,6 @@ from
     kela_scd2_source;
 
 -- 2. Выделение новых и изменённых записей (transform); вставка их в целевую таблицу (load)
--- Отбираем изменённые записи для последующей вставки в целевую таблицу
 
 -- добавляем новую версию изменённых записей в целевую таблицу
 insert into 
@@ -239,3 +238,4 @@ commit;
 insert into kela_scd2_source (id, val, update_dt) values (8,'H', current_date);
 update kela_scd2_source set val = null, update_dt = current_date where id = 3;
 delete from kela_scd2_source where id = 7;
+
