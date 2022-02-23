@@ -1,5 +1,83 @@
-Напишите скрипт для инкрементальной загрузки в SCD2 хранилище по аналогии с тем, что мы делали для SCD1:
-- учтите новые записи
-- учтите удалённые записи через логическое удаление (сведите задачу к учёту update изменений)
-- учтите изменившиеся записи (закройте старую версию, создайте новую)
-- храните версии в SCD2 таблицах (valid_from, valid_to, изменение версий подразумевает изменение атрибутов)
+-------------------------------------------------------------------------------------------------
+-- Инкрементальная загрузка SCD1
+-------------------------------------------------------------------------------------------------
+-- Подготовка структур
+create table de3at.sind_source as select * from de.incremental;
+create table de3at.sind_stg as select * from de1m.sind_source where 1=0; -- сохраняем DDL
+create table de3at.sind_stg_del as select id from de1m.chrn_source where 1=0;
+
+-- insert into de3at.chrn_source (id, val, update_dt ) values (7,'G',current_date);
+-- update de3at.sind_source set val = null, update_dt = current_date where id = 3;
+-- delete from de3at.sind_source where id = 7;
+
+create table de3at.sind_meta(
+    schema_name varchar2(30),
+    table_name varchar2(30),
+    max_update_dt date
+);
+
+insert into de3at.sind_meta( schema_name, table_name, max_update_dt )
+values( 'DE3AT','SIND_SOURCE', to_date('15.01.2022 12:36:40','DD.MM.YYYY HH24:MI:SS') );
+
+create table de3at.sind_target (
+	id number,
+	val varchar2(50),
+	create_dt date,
+	update_dt date 
+);
+
+-- Инкрементальная загрузка
+
+-- 1. Загрузка в STG (захват, extract)
+truncate table de3at.sind_stg;
+truncate table de3at.sind_stg_del;
+
+insert into de3at.sind_stg ( id, val, update_dt )
+select id, val, update_dt from de1m.chrn_source
+where update_dt > ( 
+    select max_update_dt
+    from de3at.sind_meta
+    where schema_name = 'DE3AT' and table_name = 'SIND_SOURCE'
+);
+
+insert into de3at.sind_stg_del ( id )
+select id from de3at.sind_source;
+
+-- 2. Выделение вставок и изменений (transform); вставка в их приемник (load)
+merge into de3at.sind_target tgt
+using de3at.sind_stg stg
+on( stg.id = tgt.id )
+when matched then 
+    update set tgt.val = stg.val, tgt.update_dt = stg.update_dt
+    where 1=0
+    or stg.val <> tgt.val or ( stg.val is null and tgt.val is not null ) or ( stg.val is not null and tgt.val is null )
+when not matched then 
+    insert ( id, val, create_dt, update_dt ) 
+    values ( stg.id, stg.val, stg.update_dt, cast( null as date ) );
+
+-- 3. Обработка удалений.
+delete from de3at.sind_target
+where id in (
+    select tgt.id
+    from de3at.sind_target tgt 
+    left join de3at.sind_stg_del stg
+    on tgt.id = stg.id
+    where stg.id is null
+);
+
+-- 4. Обновление метаданных.
+update de3at.sind_meta
+set max_update_dt = ( select max( update_dt ) from de3at.sind_stg )
+where schema_name = 'DE3AT' and table_name = 'SIND_SOURCE';
+
+commit;
+
+-------------------------------------------------------------------------------------------------
+-- Конец - Инкрементальная загрузка SCD1
+-------------------------------------------------------------------------------------------------
+
+-- Напишите скрипт для инкрементальной загрузки в SCD2 хранилище по аналогии с тем, что мы делали для SCD1:
+-- - учтите новые записи
+-- - учтите удалённые записи через логическое удаление (сведите задачу к учёту update изменений)
+-- - учтите изменившиеся записи (закройте старую версию, создайте новую)
+-- - храните версии в SCD2 таблицах (valid_from, valid_to, изменение версий подразумевает изменение атрибутов)
