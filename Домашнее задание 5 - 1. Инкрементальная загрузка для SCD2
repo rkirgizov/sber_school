@@ -53,6 +53,7 @@ values
         to_date('01.02.2022 12:00:00','DD.MM.YYYY HH24:MI:SS')
     );
 
+---------------------------------------------------------------------------------------------------------------
 -- Инкрементальная загрузка
 
 -- 1. Загрузка в STG (захват, extract)
@@ -173,8 +174,7 @@ insert into
             valid_from,
             valid_to,
             is_deleted)
--- Отбираем удалённые из источника записи
-select 
+select -- Отбираем удалённые из источника записи
     id, 
     val, 
     create_dt, 
@@ -185,6 +185,7 @@ from
     kela_scd2_target 
 where   
     current_date between valid_from and valid_to    -- последняя действующая запись
+    and is_deleted = '0'
     and id in (
         select 
             tgt.id
@@ -194,7 +195,7 @@ where
             kela_scd2_stage_del stg_dld
             on tgt.id = stg_dld.id
         where
-            stg_dld.id is null);
+            stg_dld.id is null );
 
 -- обновляем конечную дату валидности у удалённых записей
 update 
@@ -231,7 +232,10 @@ set
 -- подтверждаем все изменения
 commit;
 
--- ПРОВЕРОЧНЫЕ ИЗМЕНЕНИЯ ИСТОЧНИКА
+-- конец инкрементальной загрузки
+---------------------------------------------------------------------------------------------------------------
+
+-- ПРОВЕРОЧНЫЕ ИЗМЕНЕНИЯ ИСТОЧНИКА 1
 insert into kela_scd2_source (id, val, update_dt) values (8,'H', current_date);
 update kela_scd2_source set val = null, update_dt = current_date where id = 3;
 delete from kela_scd2_source where id = 7;
