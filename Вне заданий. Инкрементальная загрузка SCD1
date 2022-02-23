@@ -1,0 +1,147 @@
+-------------------------------------------------------------------------------------------------
+-- Инкрементальная загрузка SCD1
+-------------------------------------------------------------------------------------------------
+-- Подготовка структур
+
+-- drop table kela_scd1_source;
+-- drop table kela_scd1_stage;
+-- drop table kela_scd1_stage_del;
+-- drop table kela_scd1_target;
+
+-- создаём и заполняем источник
+create table kela_scd1_source (
+	id number (2, 0) not null,
+	val varchar2 (20),
+	update_dt date);
+insert into kela_scd1_source (id, val, update_dt ) values (1,'A',current_date - interval '7' day);
+insert into kela_scd1_source (id, val, update_dt ) values (2,'B',current_date - interval '6' day);
+insert into kela_scd1_source (id, val, update_dt ) values (3,'C',current_date - interval '5' day);
+insert into kela_scd1_source (id, val, update_dt ) values (4,'D',current_date - interval '4' day);
+insert into kela_scd1_source (id, val, update_dt ) values (5,'E',current_date - interval '3' day);
+insert into kela_scd1_source (id, val, update_dt ) values (6,'F',current_date - interval '2' day);
+insert into kela_scd1_source (id, val, update_dt ) values (7,'G',current_date - interval '1' day);
+-- создаём временное хранилище, копируя метаданные через неверное условие
+create table kela_scd1_stage as select * from kela_scd1_source where 1=0; 
+-- создаём временное хранилище для id всех записей из источника
+create table kela_scd1_stage_del as select id from kela_scd1_source where 1=0;
+-- создаём целевую таблицу
+create table 
+    kela_scd1_target (
+        id number (2, 0),
+        val varchar2 (20),
+        create_dt date,
+        update_dt date);
+-- создаём таблицу с метаданными, инициируем первичную дату обновления 
+create table kela_scd1_meta(
+    schema_name varchar2(30),
+    table_name varchar2(30),
+    max_update_dt date
+);
+insert into 
+    kela_scd1_meta  
+    (
+        schema_name,
+        table_name, 
+        max_update_dt
+        )
+values
+    (
+        'DE3AT',
+        'KELA_SCD1_TARGET',
+        to_date('01.02.2022 12:00:00','DD.MM.YYYY HH24:MI:SS')
+    );
+
+-- Инкрементальная загрузка
+
+-- 1. Загрузка в STG (захват, extract)
+-- очищаем временные хранилища
+truncate table kela_scd1_stage;
+truncate table kela_scd1_stage_del;
+-- заполняем основное временное хранилище 
+insert into 
+    kela_scd1_stage (
+        id, 
+        val, 
+        update_dt)
+select 
+    id, 
+    val, 
+    update_dt 
+from 
+    kela_scd1_source
+where 
+    update_dt > ( 
+        select max_update_dt
+        from kela_scd1_meta
+        where schema_name = 'DE3AT' and table_name = 'KELA_SCD1_TARGET');
+-- собираем все имеющиеся на данный момент id в источнике
+insert into 
+    kela_scd1_stage_del (id)
+select 
+    id 
+from 
+    kela_scd1_source;
+
+-- 2. Выделение новых и изменённых записей (transform); вставка их в целевую таблицу (load)
+merge into 
+    kela_scd1_target tgt
+using 
+    kela_scd1_stage stg
+    on (stg.id = tgt.id)
+when 
+    matched -- запись с таким id уже есть
+        then update 
+            set tgt.val = stg.val, 
+            tgt.update_dt = stg.update_dt
+        where 1=0   -- служебное условие для дебага
+        or stg.val <> tgt.val -- изменилось значение
+        or (stg.val is null and tgt.val is not null) -- проверка на изменение с null на одной стороне 
+        or (stg.val is not null and tgt.val is null) -- проверка на изменение с null на другой стороне
+when not matched -- новая запись
+    then 
+        insert (
+            id, 
+            val, 
+            create_dt, 
+            update_dt) 
+        values (
+            stg.id, 
+            stg.val, 
+            stg.update_dt, 
+            cast(null as date));
+
+-- 3. Обработка удалений
+delete from 
+    kela_scd1_target 
+where   -- проверяем, есть ли id из целевой таблицы в источнике, если нет, значит запись в источнике удалена
+    id in (
+        select 
+            tgt.id
+        from 
+            kela_scd1_target tgt 
+        left join -- при левом джойне id во временном хранилище будет нулевым 
+            kela_scd1_stage_del stg
+            on tgt.id = stg.id
+        where   -- такие записи удаляем из целевой таблицы
+            stg.id is null);
+
+-- 4. Обновление метаданных.
+update 
+    kela_scd1_meta
+set 
+    max_update_dt = (
+        select 
+            max (update_dt) 
+        from 
+            kela_scd1_stage)
+        where 
+            schema_name = 'DE3AT' 
+            and table_name = 'KELA_SCD1_TARGET';
+
+-- подтверждаем все изменения
+commit;
+
+-- ПРОВЕРОЧНЫЕ ИЗМЕНЕНИЯ ИСТОЧНИКА
+insert into kela_scd1_source (id, val, update_dt) values (8,'F', current_date);
+update kela_scd1_source set val = null, update_dt = current_date where id = 3;
+delete from kela_scd1_source where id = 7;
