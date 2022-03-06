@@ -1,0 +1,253 @@
+• В каком каталоге вы находитесь?
+[de3at@data-engineering ~]$ pwd
+/home/de3at
+
+• Выведите содержимое текущего каталога.
+[de3at@data-engineering ~]$ ls
+acdc     bin   d        get-pip.py     ksid  my_example.csv  pavl  soad  zaha
+ande     bmth  env      helloworld.sh  lugm  ojdbc8.jar      pkln  ustu
+avzh     ^C    ENV_DIR  kdla           meln  output.txt      sind  vitm
+baratin  cool  erma     kela           mssh  paks            smal  xray
+
+• Сколько в нем файлов?
+[de3at@data-engineering ~]$ ls -l | grep "^-" | wc
+      6      54     424
+Со скрытыми (опция -а)
+[de3at@data-engineering ~]$ ls -la | grep "^-" | wc
+     13     117     951
+
+• Сколько каталогов?
+[de3at@data-engineering ~]$ ls -l | grep "^d" | wc
+     27     243    1757
+
+• Выведите содержимое каталога /home/de3at/.
+[de3at@data-engineering ~]$ ls -l /home/de3at
+total 6752
+drwxrwxr-x 3 de3at        de3at           4096 Mar  6 11:46 acdc
+drwxrwxr-x 3 de3at        de3at           4096 Mar  4 15:56 ande
+drwxrwxr-x 6 de3at        de3at           4096 Mar  1 12:49 avzh
+............
+drwxrwxr-x 2 de3at        de3at           4096 Mar  6 13:49 vitm
+drwxrwxr-x 2 de3at        de3at           4096 Mar  1 12:58 xray
+drwxrwxr-x 2 de3at        de3at           4096 Feb 27 10:01 zaha
+
+• Какой файл имеет самый большой размер?
+[de3at@data-engineering ~]$ find -type f -exec du -Sh {} + | sort -rh | head -n 1
+7.8M    ./.cache/pip/http/a/f/f/7/8/aff78a5e5275488ac38d0c87c62123a965471225e9e2b8210f79d1fc
+
+• Какой файл имеет самое длинное имя?
+[de3at@data-engineering ~]$ find . | awk '{print length,$0}' | sort -rn | head -n 1
+146 ./ENV_DIR/lib/python3.4/site-packages/pip/_vendor/requests/packages/urllib3/packages/ssl_match_hostname/__pycache__/_implementation.cpython-34.pyc
+
+--------------------------------------------------------------------------------------
+
+• Создайте свой каталог (ваш префикс xxxx) в /home/de3at/.
+[de3at@data-engineering ~]$ mkdir /home/de3at/kela
+
+• Перейдите в свой каталог. Проверьте что вы действительно в нем.
+[de3at@data-engineering ~]$ cd kela
+[de3at@data-engineering kela]$ pwd
+/home/de3at/kela
+
+• Скопируйте файл /home/de3at/sind/tmp.csv в свой каталог.
+[de3at@data-engineering kela]$ cp /home/de3at/sind/tmp.csv .
+[de3at@data-engineering kela]$ ls
+tmp.csv
+
+• Переименуйте его в my_example.csv.
+[de3at@data-engineering kela]$ mv tmp.csv my_example.csv
+[de3at@data-engineering kela]$ ls
+my_example.csv
+
+• Создайте каталог my_first_catalog внутри своего каталога.
+[de3at@data-engineering kela]$ mkdir my_first_catalog
+[de3at@data-engineering kela]$ ls
+my_example.csv  my_first_catalog
+
+• Переместите файл my_example.csv в каталог my_first_catalog
+[de3at@data-engineering kela]$ mv my_example.csv my_first_catalog
+[de3at@data-engineering kela]$ ls my_first_catalog
+my_example.csv
+
+• Попробуйте удалить my_first_catalog без указания аргумента –r, посмотрите какая будет ошибка.
+[de3at@data-engineering kela]$ rm my_first_catalog
+rm: cannot remove `my_first_catalog': Is a directory
+
+• Удалите my_first_catalog.
+[de3at@data-engineering kela]$ rm -r my_first_catalog
+[de3at@data-engineering kela]$ ls
+
+• Скопируйте все файлы из /home/de3at/sind в свой каталог одной командой.
+[de3at@data-engineering kela]$ cp -a /home/de3at/sind/* /home/de3at/kela
+[de3at@data-engineering kela]$ ls
+err.log   mydatabase.db  res.log  stderr.log  sub      tmp2.log  tmp.log
+info.log  res2.log       run.sh   stdout.log  test.sh  tmp.csv   tmp.py
+
+--------------------------------------------------------------------------------------
+
+• Создайте в своем каталоге файл warning.flg
+[de3at@data-engineering kela]$ touch warning_flg
+[de3at@data-engineering kela]$ ls
+err.log        res2.log  stderr.log  test.sh   tmp.log
+info.log       res.log   stdout.log  tmp2.log  tmp.py
+mydatabase.db  run.sh    sub         tmp.csv   warning_flg
+
+• Выведите в консоль содержимое файла tmp.csv
+[de3at@data-engineering kela]$ cat tmp.csv
+a1,b2,c3,d4
+a11,b21,c31,d41
+a,b,c,d
+4,5,6,7
+JAN,4,5,6
+FEB,4,7,8
+DEC,4,9,10
+
+• Просмотрите удобным способом файл tmp.log
+[de3at@data-engineering kela]$ nano tmp.log
+
+• Выведите первые 5 строк файла tmp.log
+[de3at@data-engineering kela]$ head -5 tmp.log
+cut: fields and positions are numbered from 1
+Try `cut --help' for more information.
+cut: fields and positions are numbered from 1
+Try `cut --help' for more information.
+cut: fields and positions are numbered from 1
+
+• Выведите последние 5 строк файла tmp.log
+[de3at@data-engineering kela]$ tail -5 tmp.log
+Try `cut --help' for more information.
+a1,c3
+a11,c31
+...
+...
+
+• Начните редактировать файл my_first_file.txt
+• Напишите несколько фраз, сохраните и выйдите
+• Проверьте с помощью cat что у вас все получилось
+[de3at@data-engineering kela]$ nano my_first_file.txt
+[de3at@data-engineering kela]$ cat my_first_file.txt
+1
+2
+3
+4
+5
+6
+7
+8
+
+• Выведите расширенное содержимое вашего каталога в файл output.txt.
+[de3at@data-engineering kela]$ ls -lh . > output.txt
+[de3at@data-engineering kela]$ cat output.txt
+total 52K
+-rw-rw-r-- 1 de3at de3at  170 Feb 26 17:00 err.log
+-rw-rw-r-- 1 de3at de3at    0 Feb 26 17:00 info.log
+-rw-r--r-- 1 de3at de3at 2.0K Feb 26 17:00 mydatabase.db
+-rw-rw-r-- 1 de3at de3at   16 Mar  6 17:15 my_first_file.txt
+-rw-rw-r-- 1 de3at de3at    0 Mar  6 17:20 output.txt
+-rw-rw-r-- 1 de3at de3at  207 Feb 26 17:00 res2.log
+-rw-rw-r-- 1 de3at de3at  101 Feb 26 17:00 res.log
+-rwxrwxr-x 1 de3at de3at   43 Feb 26 17:00 run.sh
+-rw-rw-r-- 1 de3at de3at    0 Feb 26 17:00 stderr.log
+-rw-rw-r-- 1 de3at de3at  726 Feb 26 17:00 stdout.log
+drwxrwxr-x 3 de3at de3at 4.0K Feb 26 17:00 sub
+-rwxrwxr-x 1 de3at de3at   50 Feb 26 17:00 test.sh
+-rw-rw-r-- 1 de3at de3at  598 Feb 26 17:00 tmp2.log
+-rw-rw-r-- 1 de3at de3at   75 Feb 26 17:00 tmp.csv
+-rw-rw-r-- 1 de3at de3at  596 Feb 26 17:00 tmp.log
+-rw-rw-r-- 1 de3at de3at  619 Feb 26 17:00 tmp.py
+-rw-rw-r-- 1 de3at de3at    0 Mar  6 17:09 warning_flg
+
+• Допишите в файл output.txt расширенное содержимое каталога /home/de3at/sind
+[de3at@data-engineering kela]$ ls -lh /home/de3at/sind >> output.txt
+[de3at@data-engineering kela]$ cat output.txt
+total 52K
+-rw-rw-r-- 1 de3at de3at  170 Feb 26 17:00 err.log
+-rw-rw-r-- 1 de3at de3at    0 Feb 26 17:00 info.log
+-rw-r--r-- 1 de3at de3at 2.0K Feb 26 17:00 mydatabase.db
+-rw-rw-r-- 1 de3at de3at   16 Mar  6 17:15 my_first_file.txt
+-rw-rw-r-- 1 de3at de3at    0 Mar  6 17:20 output.txt
+-rw-rw-r-- 1 de3at de3at  207 Feb 26 17:00 res2.log
+-rw-rw-r-- 1 de3at de3at  101 Feb 26 17:00 res.log
+-rwxrwxr-x 1 de3at de3at   43 Feb 26 17:00 run.sh
+-rw-rw-r-- 1 de3at de3at    0 Feb 26 17:00 stderr.log
+-rw-rw-r-- 1 de3at de3at  726 Feb 26 17:00 stdout.log
+drwxrwxr-x 3 de3at de3at 4.0K Feb 26 17:00 sub
+-rwxrwxr-x 1 de3at de3at   50 Feb 26 17:00 test.sh
+-rw-rw-r-- 1 de3at de3at  598 Feb 26 17:00 tmp2.log
+-rw-rw-r-- 1 de3at de3at   75 Feb 26 17:00 tmp.csv
+-rw-rw-r-- 1 de3at de3at  596 Feb 26 17:00 tmp.log
+-rw-rw-r-- 1 de3at de3at  619 Feb 26 17:00 tmp.py
+-rw-rw-r-- 1 de3at de3at    0 Mar  6 17:09 warning_flg
+total 48K
+-rw-rw-r-- 1 de3at de3at  170 Feb 26 17:00 err.log
+-rw-rw-r-- 1 de3at de3at    0 Feb 26 17:00 info.log
+-rw-r--r-- 1 de3at de3at 2.0K Feb 26 17:00 mydatabase.db
+-rw-rw-r-- 1 de3at de3at  207 Feb 26 17:00 res2.log
+-rw-rw-r-- 1 de3at de3at  101 Feb 26 17:00 res.log
+-rwxrwxr-x 1 de3at de3at   43 Feb 26 17:00 run.sh
+-rw-rw-r-- 1 de3at de3at    0 Feb 26 17:00 stderr.log
+-rw-rw-r-- 1 de3at de3at  726 Feb 26 17:00 stdout.log
+drwxrwxr-x 3 de3at de3at 4.0K Feb 26 17:00 sub
+-rwxrwxr-x 1 de3at de3at   50 Feb 26 17:00 test.sh
+-rw-rw-r-- 1 de3at de3at  598 Feb 26 17:00 tmp2.log
+-rw-rw-r-- 1 de3at de3at   75 Feb 26 17:00 tmp.csv
+-rw-rw-r-- 1 de3at de3at  596 Feb 26 17:00 tmp.log
+-rw-rw-r-- 1 de3at de3at  619 Feb 26 17:00 tmp.py
+
+• Выпишите из tmp.log 3 последние строки в отдельный файл last_result.log
+[de3at@data-engineering kela]$ tail -3 tmp.log >> last_result.log
+[de3at@data-engineering kela]$ cat last_result.log
+a11,c31
+...
+...
+
+• Сколько строк в вашем файле output.txt?
+[de3at@data-engineering kela]$ wc -l output.txt
+33 output.txt
+
+• Выведите только количество строк. Выведите в отдельный файл lines_count.txt
+[de3at@data-engineering kela]$ wc -l < output.txt > lines_count.txt
+[de3at@data-engineering kela]$ cat lines_count.txt
+33
+
+• Выведите четвертую строку из файла tmp.log. Все необходимые пакеты вы знаете.
+[de3at@data-engineering kela]$ sed '4!d' tmp.log
+Try `cut --help' for more information.
+[de3at@data-engineering kela]$ head -n 4 tmp.log | tail -n 1
+Try `cut --help' for more information.
+
+Пример простейшего bash-скрипта:
+#!/bin/bash
+echo 'Hello, world!'
+
+• Создайте bash-скрипт helloworld.sh в вашем каталоге. Попытайтесь его выполнить.
+[de3at@data-engineering kela]$ nano helloworld.sh
+[de3at@data-engineering kela]$ /home/de3at/kela/helloworld.sh
+-bash: /home/de3at/kela/helloworld.sh: Permission denied
+
+• Сделайте ваш скрипт исполняемым и запустите его.
+[de3at@data-engineering kela]$ chmod u+x helloworld.sh
+[de3at@data-engineering kela]$ /home/de3at/kela/helloworld.sh
+Hello, world!
+
+• Подключитесь к серверу двумя терминалами.
+• В одном из них напишите bash-скрипт, выполняющий бесконечную работу. Используйте sleep для этого. Запустите его.
+#!/bin/bash
+while true
+ do
+  echo "hello"
+  sleep 2
+done
+
+• В другом терминале найдите идентификатор процесса, после этого убейте процесс.
+[de3at@data-engineering kela]$ ps -fu de3at
+UID        PID  PPID  C STIME TTY          TIME CMD
+de3at    28827 28020  0 18:09 pts/0    00:00:00 /bin/bash /home/de3at/kela/kela_
+de3at    29366 28827  0 18:14 pts/0    00:00:00 sleep 2
+de3at    29369 20320  1 18:14 pts/4    00:00:00 ps -fu de3at
+[de3at@data-engineering kela]$ kill 28827
+
+• Посмотрите что произошло в первом терминале.
+...
+hello
+Terminated
