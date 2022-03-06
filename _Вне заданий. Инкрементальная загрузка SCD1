@@ -29,7 +29,7 @@ create table
     kela_scd1_target (
         id number (2, 0),
         val varchar2 (20),
-        create_dt date,
+        create_dt date, 
         update_dt date);
 -- создаём таблицу с метаданными, инициируем первичную дату обновления 
 create table kela_scd1_meta(
