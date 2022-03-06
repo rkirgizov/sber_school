@@ -1,14 +1,100 @@
 Придумайте и вручную создайте небольшой
 DataFrame (2 столбца, 3-5 строк, с индексами).
+phyton
+import pandas as pd
+>>> data = {
+...     'Jhon' : [11, 12, 13, 14, 15],
+...     'Bill' : [21, 22, 23, 24, 25]
+... }
+>>> df = pd.DataFrame (data, index=['a', 'b', 'c', 'd', 'e'])
+>>> df["Summ"] = [32, 34, 36, 38, 40]
+>>> df[:]
+   Bill  Jhon  Summ
+a    21    11    32
+b    22    12    34
+c    23    13    36
+d    24    14    38
+e    25    15    40
 
+Измените значение 2-3 ячеек в загруженном DataFrame. 
+>>> df['Bill']['b'] = 32
+>>> df['Summ']['b'] = 44
+>>> df['Jhon']['d'] = 24
+>>> df['Summ']['d'] = 48
+>>> df[:]
+   Bill  Jhon  Summ
+a    21    11    32
+b    32    12    44
+c    23    13    36
+d    24    24    48
+e    25    15    40
 
-
-Измените значение 2-3 ячеек в загруженном
-DataFrame. Выгрузите измененный DataFrame
-в xlsx файл.
-
+Выгрузите измененный DataFrame в xlsx файл.
+>>> df.to_excel ('kela_pandas_out.xlsx', sheet_name='sheet1', header=True, index=False)
 
 
 • Запустить SQL запрос в СУБД Oracle
+>>> import pandas as pd
+>>> imort jaydebeapi
+>>> conn = jaydebeapi.connect(
+... 'oracle.jdbc.driver.OracleDriver',
+... 'jdbc:oracle:thin:de3at/bardthebowman@de-oracle.chronosavant.ru:1521/deoracle',
+... ['de3at','bardthebowman'],
+... '/home/de3at/ojdbc8.jar'
+... )
+>>> curs = conn.cursor()
+>>> curs.execute("select * from de3at.kela_meta")
+>>> result = curs.fetchall()
+>>> print (result)
+[('DE3AT', 'KELA_DWH_FCT_PAYMENT_LOGS', '2022-02-27 14:53:46'), ('DE3AT', 'KELA_DWH_DIM_PHONES_HIST', '2022-02-27 14:53:46'), ('DE3AT', 'KELA_DWH_DIM_ACCOUNTS_HIST', '2022-02-27 14:53:46'), ('DE3AT', 'KELA_DWH_DIM_CLIENTS_HIST', '2022-02-27 14:53:46'), ('DE3AT', 'KELA_DWH_DIM_MANAGERS_HIST', '2022-02-27 14:53:46')]
+
 • Загрузка xlsx (в виде DataFrame pandas) в таблицу Oracle (любой файл в таблицу DE3AT.XXXX_<name>)
+>>> import pandas as pd
+>>> import jaydebeapi
+>>> df = pd.read_excel('/home/de3at/kela/kela_pandas_out.xlsx', index_col=None, header=0)
+>>> conn = jaydebeapi.connect(
+...     'oracle.jdbc.driver.OracleDriver',
+...     'jdbc:oracle:thin:de3at/bardthebowman@de-oracle.chronosavant.ru:1521/deoracle',
+...     ['de3at','bardthebowman'],
+...     '/home/de3at/ojdbc8.jar'
+... )
+>>> curs = conn.cursor()
+>>> sql_create_table = '''
+...     create table de3at.kela_pandas_out_xlsx (
+...         bill number(2),
+...         jhon number(2),
+...         summ number(2)
+...     )
+... '''
+>>> curs.execute(sql_create_table)
+>>> sql_insert_table = '''
+...     insert into de3at.kela_pandas_out_xlsx(bill, jhon, summ) values
+...     (?, ?, ?)
+... '''
+>>> columns = [0, 1, 2]
+>>> df_to_export = df[[df.columns[c] for c in columns]].to_dict('list')
+>>> curs.executemany(sql_insert_table, zip(*(df_to_export.values())))
+
 • Выгрузить таблицу Oracle в DataFrame pandas (можете выгрузить таблицу из предыдущего пункта и сравнить отличия)
+import pandas
+import jaydebeapi
+conn = jaydebeapi.connect(
+    'oracle.jdbc.driver.OracleDriver',
+    'jdbc:oracle:thin:de3at/bardthebowman@de-oracle.chronosavant.ru:1521/deoracle',
+    ['de3at','bardthebowman'],
+    '/home/de3at/ojdbc8.jar'
+)
+curs = conn.cursor()
+curs.execute("select * from de3at.kela_pandas_out_xlsx")
+result = curs.fetchall()
+names = [ x[0] for x in curs.description ]
+df = pandas.DataFrame(result, columns = names)
+df[:]
+   BILL  JHON  SUMM
+0    21    11    32
+1    32    12    44
+2    23    13    36
+3    24    24    48
+4    25    15    40
+
+Наименования столбцов в верхнем регистре, индекс цифровой, порядок не изменился.
