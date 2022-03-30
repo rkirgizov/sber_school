@@ -1,0 +1,84 @@
+1. Поиск самолетов[1]
+Пожалуйста, ознакомьтесь с уроком "введение" перед решением задач и обратите особое внимание на блок "примечания"
+Необходимо вывести все самолеты, максимальная дальность полета которых находится в пределах от 1300 до 5800 километров включительно. Элементы выборки должны быть упорядочены по возрастанию дальности полета.
+select model, range
+from aircrafts
+where range > 1300 and range <= 5800
+order by range ASC
+
+2. Поиск самолетов[2]
+Необходимо вывести все модели самолетов, на которых был совершен хотя бы один рейс, с указанием количества рейсов, выполненных на каждой модели. Рейс считается выполненным, если самолет прибыл в пункт назначения. Элементы выборки должны быть упорядочены по убыванию числа рейсов.
+SELECT model, COUNT(flights.aircraft_code) as flights_num
+FROM aircrafts
+LEFT JOIN flights on flights.aircraft_code = aircrafts.aircraft_code 
+WHERE actual_arrival IS NOT NULL
+Group By aircrafts.aircraft_code
+Having COUNT(flights.aircraft_code) > 0
+Order By flights_num DESC
+
+3. Поиск дешевых авиабилетов
+Требуется найти все рейсы, для которых средняя стоимость перелета более 3300, но менее 5000 рублей.
+Вхождения в выборку должны быть упорядочены по возрастанию flight_id.
+SELECT flight_id, ROUND(AVG(amount)) as avg_amount
+FROM ticket_flights
+Group By flight_id
+Having ROUND(AVG(amount)) > 3300 AND ROUND(AVG(amount)) < 5000
+Order By flight_id ASC
+
+4. Убытки авиакомпании[1]
+Необходимо найти недополученную из-за отмены рейсов выручку авиакомпании 
+SELECT SUM(amount) as lost_profit
+FROM ticket_flights
+LEFT JOIN flights on flights.flight_id = ticket_flights.flight_id
+WHERE status = 'Cancelled'
+
+5. Убытки авиакомпании[2]
+Необходимо найти недополученную из-за отмены рейсов выручку авиакомпании за период времени с 17 августа 2017 00:00:00 до 23 августа 2017 00:00:00 включительно.
+SELECT SUM(amount) as lost_profit
+FROM flights
+JOIN ticket_flights on flights.flight_id = ticket_flights.flight_id
+WHERE status = 'Cancelled' and flights.scheduled_departure >= '2017-08-17' AND flights.scheduled_departure <= '2017-08-23'
+
+6. Рейсы из Москвы[1]
+Необходимо для каждого дня недели найти суммарное количество рейсов из аэропортов Москвы. Вхождения в выборку должны быть упорядочены по убыванию числа рейсов.
+SELECT cast(strftime('%w', scheduled_departure) as integer) AS day_of_week, COUNT(flights.flight_id) as flights
+FROM flights 
+WHERE departure_airport = 'DME' OR departure_airport = 'SVO' OR departure_airport = 'VKO'
+GROUP BY day_of_week
+ORDER BY flights DESC
+
+7. Рейсы из Москвы[2]
+Необходимо для каждого аэропорта Москвы найти суммарное количество пассажиров на всех рейсах из данного аэропорта. Вхождения в выборку должны быть упорядочены по убыванию числа пассажиров.
+SELECT departure_airport as airport_code, COUNT (ticket_flights.flight_id) as passengers
+FROM ticket_flights
+LEFT JOIN flights on flights.flight_id = ticket_flights.flight_id
+WHERE (departure_airport = 'DME' OR departure_airport = 'SVO' OR departure_airport = 'VKO')
+GROUP BY airport_code
+ORDER BY passengers DESC
+
+8. Отмена рейсов[1]
+Исследуется распределение отмененных рейсов по аэропортам. Необходимо вывести три аэропорта, рейсы из которых отменяли чаще всего, а также количество отмен. Вхождения в выборку должны быть упорядочены по убыванию числа отмененных рейсов.
+SELECT departure_airport as airport_code, COUNT(departure_airport) as cancelled_flights_number
+FROM flights
+WHERE (status = 'Cancelled')
+GROUP BY airport_code
+ORDER BY cancelled_flights_number DESC
+LIMIT 3
+
+9. Отмена рейсов[2]
+Исследуется распределение отмененных рейсов по месяцам. Необходимо для каждого месяца найти количество отмененных рейсов, вылет которых был запланирован на один из дней данного месяца. Вхождения в выборку должны быть упорядочены по возрастанию номера месяца.
+SELECT cast(strftime('%m', scheduled_departure) as integer) AS month, COUNT(departure_airport) as cancelled_flights_number
+FROM flights 
+WHERE (status = 'Cancelled') 
+GROUP BY month
+ORDER BY month ASC
+
+10. Отмена рейсов[3]
+Исследуется распределение отмененных рейсов по городам. Необходимо вывести пять городов, рейсы из которых отменяли чаще всего, а также количество отмен. Вхождения в выборку должны быть упорядочены по убыванию числа отмененных рейсов.
+SELECT city, COUNT(departure_airport) as cancelled_flights_number
+FROM airports
+LEFT JOIN flights on flights.departure_airport = airports.airport_code
+WHERE (status = 'Cancelled') 
+GROUP BY city
+ORDER BY cancelled_flights_number DESC
+LIMIT 5

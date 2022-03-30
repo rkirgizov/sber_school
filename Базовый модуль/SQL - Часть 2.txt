@@ -1,0 +1,54 @@
+1. Разгрузка летного пространства
+Необходимо найти аэропорты вылета, из которых рейсы летают во Внуково (VKO), но не в Шереметьево (SVO).
+То есть был запланирован рейс из данного аэропорта во Внуково, но ни разу не был запланирован рейс в Шереметьево.
+SELECT DISTINCT departure_airport
+FROM flights
+WHERE arrival_airport = 'VKO' 
+AND departure_airport NOT IN (SELECT departure_airport FROM flights WHERE arrival_airport = 'SVO')
+
+2. Самый дорогой билет в бизнес-классе
+Нужно найти максимальную стоимость билета в бизнес-классе для каждой модели самолета.
+SELECT model, max(amount) as amount
+FROM aircrafts
+LEFT JOIN
+	(
+	SELECT * 
+	FROM ticket_flights
+	LEFT JOIN flights on flights.flight_id = ticket_flights.flight_id
+	WHERE fare_conditions = 'Business'
+	) as tab2
+on aircrafts.aircraft_code = tab2.aircraft_code
+WHERE amount IS NOT NULL
+GROUP BY model
+ORDER BY amount DESC
+
+3. Летим в Ханты-Мансийск
+Необходимо найти все рейсы за все месяцы из Шереметьево (код аэропорта SVO) в Ханты-Мансийск (код аэропорта HMA) с одним промежуточным аэропортом (пересадки, включенные в один билет, считать за один перелет).
+Для каждой пары рейсов найдите минимальную сумму за билеты. Результирующую выборку отсортируйте по возрастанию полной суммы.
+SELECT flight_id_1,  flight_id_2, (total_1 + total_2) as total_amount
+FROM (
+	SELECT MIN(t1.amount) as total_1, t2.flight_id as flight_id_1, t2.departure_airport, t2.arrival_airport, t2.scheduled_departure, t2.scheduled_arrival
+	FROM ticket_flights as t1
+	JOIN flights as t2
+	on t1.flight_id = t2.flight_id
+	WHERE t2.departure_airport = 'SVO' AND t2.arrival_airport != 'HMA'
+	group by t2.flight_id
+) as tb1
+INNER JOIN (
+	SELECT MIN(t1.amount) as total_2, t2.flight_id as flight_id_2, t2.departure_airport, t2.arrival_airport, t2.scheduled_departure, t2.scheduled_arrival
+	FROM ticket_flights as t1
+	JOIN flights as t2
+	on t1.flight_id = t2.flight_id
+	WHERE t2.departure_airport != 'SVO' AND t2.arrival_airport = 'HMA'
+	group by t2.flight_id
+) as tb2
+on tb1.scheduled_arrival < tb2.scheduled_departure and tb1.arrival_airport = tb2.departure_airport 
+order by total_amount
+
+4. Загруженные рейсы
+Найти все пары аэропортов, между которыми было больше одного рейса, которые должны были вылететь 24 августа 2017 года.
+SELECT departure_airport, arrival_airport, COUNT (departure_airport) as amount
+FROM flights
+WHERE (scheduled_departure > '2017-08-24 00:00:00' AND scheduled_departure <= '2017-08-24 23:59:59')
+GROUP BY departure_airport, arrival_airport
+HAVING COUNT (departure_airport) > 1
